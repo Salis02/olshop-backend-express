@@ -206,7 +206,7 @@ model CartItem {
   updated_at DateTime @updatedAt
 
   cart Cart @relation(fields: [cart_id], references: [id], onDelete: Cascade)
-  product Product @relation(field: [product_id], references: [uuid])
+  product Product @relation(fields: [product_id], references: [uuid])
   variant ProductVariant? @relation(fields: [variant_id], references: [id])
 }
 
