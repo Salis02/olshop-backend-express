@@ -146,6 +146,18 @@ model ProductImage {
   product Product @relation(fields: [product_id], references: [uuid], onDelete: Cascade)
 }
 
+model ProductVariant {
+  id                Int       @id @default(autoincrement())
+  product_id        String
+  name              String
+  price_adjustment  Int?
+  stock_adjustment  Int?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  product           Product   @relation(fields: [product_id], references: [uuid], onDelete: Cascade)
+}
+
 model ProductAttribute {
   id Int @id @default(autoincrement())
   product_id String
