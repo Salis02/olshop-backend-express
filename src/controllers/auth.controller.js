@@ -19,4 +19,14 @@ const login = async (req, res) => {
     }
 }
 
-module.exports = { register, login };
+const logout = async (req, res) => {
+    try {
+        //Untuk logout di sisi server, biasanya tidak perlu melakukan apa-apa jika menggunakan JWT.
+        //Namun, jika menggunakan session, kita bisa menghancurkan session di sini.
+        return success(res, null, 'User logged out successfully', 200);
+    } catch (err) {
+        return error(res, err.message, 400);
+    }
+}
+
+module.exports = { register, login, logout };
