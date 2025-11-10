@@ -1,0 +1,42 @@
+const prisma = require('../prisma/client');
+
+const getAddressesByUserId = async (userId) => {
+    return await prisma.address.findMany({
+        where: { user_id: userId },
+        orderBy: { created_at: 'desc' },
+    })
+}
+
+const createAddress = async (userId, data) => {
+    return await prisma.address.create({
+        data: { ...data, user_id: userId },
+    })
+}
+
+const updateAddress = async (id, userId, data) => {
+    const address = await prisma.address.findUnique({
+        where: { id }
+    });
+
+    if (!address || address.user_id !== userId) {
+        throw new Error('Address not found or unauthorized');
+    }
+
+    return await prisma.address.update({
+        where: { id },
+        data,
+    });
+}
+
+const deleteAddress = async (id, userId) => {
+    const address = await prisma.address.findUnique({
+        where: { id }
+    });
+    if (!address || address.user_id !== userId) {
+        throw new Error('Address not found or unauthorized');
+    }
+
+    return await prisma.address.delete({
+        where: { id }
+    });
+}
