@@ -40,3 +40,10 @@ const deleteAddress = async (id, userId) => {
         where: { id }
     });
 }
+
+module.exports = {
+    getAddressesByUserId,
+    createAddress,
+    updateAddress,
+    deleteAddress,
+};

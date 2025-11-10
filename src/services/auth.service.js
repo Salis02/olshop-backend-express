@@ -58,12 +58,12 @@ const loginUser = async ({ email, password }) => {
     }
 
     //Generate JWT Token
-    const token = generateToken({ uuid: user.id, role_id: user.role_id });
+    const token = generateToken({ uuid: user.uuid, role_id: user.role_id });
 
     return {
         token,
         user: {
-            uuid: user.id,
+            uuid: user.uuid,
             name: user.name,
             email: user.email,
             role_id: user.role_id,
