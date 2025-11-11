@@ -46,7 +46,7 @@ const createProduct = async (data) => {
             price: Number(price),
             stock: Number(stock),
             description,
-            categoryId: Number(category_id)
+            category_id: Number(category_id)
         }
     });
 }

@@ -10,7 +10,7 @@ const getAllCategories = async () => {
 
 const createCategory = async (data) => {
     const { name, slug } = data;
-    const exists = await prisma.category.findUnique({
+    const exists = await prisma.category.findFirst({
         where: { name }
     });
 
