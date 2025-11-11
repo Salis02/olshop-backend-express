@@ -31,6 +31,7 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
+        const { id } = req.params;
         await addressService.deleteAddress(Number(id), req.user.uuid);
         return success(res, null, 'Address deleted successfully', 200);
     } catch (err) {
