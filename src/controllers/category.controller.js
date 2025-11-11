@@ -1,5 +1,5 @@
 const categoryService = require('../services/category.service');
-const { success, error } = require('../utils/response.util');
+const { success, error } = require('../utils/response');
 
 const index = async (req, res) => {
     try {
