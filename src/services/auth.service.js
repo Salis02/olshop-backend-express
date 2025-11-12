@@ -1,8 +1,14 @@
 const prisma = require('../prisma/client');
 const bcrypt = require('bcryptjs');
 const { generateToken } = require('../utils/jwt');
+const { validateRequest } = require('../utils/validate');
+const { registerSchema, loginSchema } = require('../validators/auth.validator')
 
-const registerUser = async ({ name, email, password, phone }) => {
+console.log('registerSchema type:', typeof registerSchema);
+const registerUser = async (data) => {
+
+    //Validate input data
+    const { name, email, password, phone } = validateRequest(registerSchema, data);
 
     //Cek User sudah ada atau belum
     const existUser = await prisma.user.findUnique({
@@ -38,10 +44,18 @@ const registerUser = async ({ name, email, password, phone }) => {
         }
     });
 
-    return { uuid: newUser.id, name: newUser.name, email: newUser.email };
+    return {
+        uuid: newUser.id,
+        name: newUser.name,
+        email: newUser.email
+    };
 }
 
-const loginUser = async ({ email, password }) => {
+const loginUser = async (data) => {
+
+    //Validate input data
+    const { email, password } = validateRequest(loginSchema, data);
+
     //Cari user berdasarkan email
     const user = await prisma.user.findUnique({
         where: { email }

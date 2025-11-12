@@ -12,7 +12,14 @@ const index = async (req, res) => {
 
 const show = async (req, res) => {
     try {
-        const product = await productService.getProductById(Number(req.params.id));
+        const { uuid } = req.params;
+
+        // Validate UUID format (basic check)
+        if (!uuid || typeof uuid !== 'string') {
+            return error(res, 'Invalid product UUID', 400);
+        }
+
+        const product = await productService.getProductById(req.params.uuid);
         return success(res, product, 'Product retrieved successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);

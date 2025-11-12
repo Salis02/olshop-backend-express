@@ -5,7 +5,7 @@ const productController = require('../controllers/product.controller');
 
 //Public routes
 router.get('/', productController.index);
-router.get('/:id', productController.show);
+router.get('/:uuid', productController.show);
 
 //Protected routes
 router.post('/', authMiddleware, productController.create);
