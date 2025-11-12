@@ -12,7 +12,10 @@ const registerSchema = z.object({
     password: z
         .string()
         .min(6, 'Password must be at least 6 characters long')
-        .max(100, 'Password must be at most 100 characters long'),
+        .max(100, 'Password must be at most 100 characters long')
+        .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
+            message: 'New password must contain both letters and numbers',
+        }),
     phone: z
         .string()
         .refine((val) => !val || /^\+?[1-9]\d{1,14}$/.test(val), {
