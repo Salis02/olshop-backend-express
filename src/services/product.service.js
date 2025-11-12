@@ -1,4 +1,7 @@
+const slugify = require('slugify');
 const prisma = require('../prisma/client');
+const { success, error } = require('../utils/response');
+
 
 const getAllProducts = async (filters = {}) => {
     const where = {};
@@ -38,18 +41,31 @@ const getProductById = async (id) => {
     return product;
 }
 
-const createProduct = async (data) => {
+const createProduct = async (data, userId) => {
     const { name, price, stock, description, category_id } = data;
+
+    if (!userId) {
+        throw new Error('User UUID is required to create a product');
+    }
+
+    // Generate slug and SKU
+    const slug = slugify(name, { lower: true, strict: true });
+    const sku = `SKU-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
     return await prisma.product.create({
         data: {
             name,
+            slug,
             price: Number(price),
             stock: Number(stock),
             description,
-            category_id: Number(category_id)
+            sku,
+            category_id: Number(category_id),
+            created_by: userId
         }
     });
 }
+
 const updateProduct = async (id, data) => {
     const product = await prisma.product.findUnique({ where: { id } });
     if (!product) {

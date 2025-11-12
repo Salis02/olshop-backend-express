@@ -9,7 +9,7 @@ const getAllCategories = async () => {
 }
 
 const createCategory = async (data) => {
-    const { name, slug } = data;
+    const { name, slug, description } = data;
     const exists = await prisma.category.findFirst({
         where: { name }
     });
@@ -21,7 +21,8 @@ const createCategory = async (data) => {
     return await prisma.category.create({
         data: {
             name,
-            slug
+            slug,
+            description
         }
     });
 }
