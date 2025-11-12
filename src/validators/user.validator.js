@@ -25,7 +25,11 @@ const updatePasswordSchema = z.object({
         .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
             message: 'New password must contain both letters and numbers',
         })
-});
+})
+    .refine((data) => data.oldPassword !== data.newPassword, {
+        message: 'New password must be different from old password',
+        path: ['newPassword'],
+    })
 
 module.exports = {
     updateProfileSchema,
