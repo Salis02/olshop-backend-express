@@ -1,8 +1,8 @@
 const prisma = require('../prisma/client');
 
-const getCart = async (uuid) => {
+const getCart = async (user_id) => {
     let cart = await prisma.cart.findFirst({
-        where: { uuid },
+        where: { user_id },
         include: {
             items: {
                 include: {
@@ -16,12 +16,14 @@ const getCart = async (uuid) => {
     // Create cart if not exists
     if (!cart) {
         cart = await prisma.cart.create({
-            data: { uuid }
+            data: { user_id }
         });
     }
+
+    return cart;
 }
 
-const addItemToCart = async (uuid, data) => {
+const addItemToCart = async (user_id, data) => {
     const { product_id, variant_id, quantity } = data;
 
     // Make sure product exists
@@ -35,12 +37,12 @@ const addItemToCart = async (uuid, data) => {
 
     // Get or create cart user
     let cart = await prisma.cart.findFirst({
-        where: { uuid },
+        where: { user_id },
     });
 
     if (!cart) {
         cart = await prisma.cart.create({
-            data: { uuid }
+            data: { user_id }
         });
     }
 
@@ -48,7 +50,7 @@ const addItemToCart = async (uuid, data) => {
     const existingItem = await prisma.cartItem.findFirst({
         where: {
             cart_id: cart.id,
-            product_id: product.id,
+            product_id: product.uuid,
             variant_id: variant_id ? variant_id : null
         }
     });
@@ -66,7 +68,7 @@ const addItemToCart = async (uuid, data) => {
         return await prisma.cartItem.create({
             data: {
                 cart_id: cart.id,
-                product_id: product.id,
+                product_id: product.uuid,
                 variant_id: variant_id ? variant_id : null,
                 quantity,
                 price_snapshot: product.price
@@ -75,10 +77,10 @@ const addItemToCart = async (uuid, data) => {
     }
 }
 
-const updateCartItem = async (uuid, item_id, quantity) => {
+const updateCartItem = async (user_id, item_id, quantity) => {
     // Get cart
     const cart = await prisma.cart.findFirst({
-        where: { uuid },
+        where: { user_id },
     });
     if (!cart) {
         throw new Error('Cart not found');
@@ -97,14 +99,14 @@ const updateCartItem = async (uuid, item_id, quantity) => {
 
     return await prisma.cartItem.update({
         where: { id: item_id },
-        data: { quantity }
+        data: { quantity: Number(quantity) }
     });
 }
 
-const removeCartItem = async (uuid, item_id) => {
+const removeCartItem = async (user_id, item_id) => {
     // Get cart
     const cart = await prisma.cart.findFirst({
-        where: { uuid },
+        where: { user_id },
     })
     if (!cart) {
         throw new Error('Cart not found');
@@ -118,10 +120,10 @@ const removeCartItem = async (uuid, item_id) => {
     });
 }
 
-const clearCart = async (uuid) => {
+const clearCart = async (user_id) => {
     // Get cart
     const cart = await prisma.cart.findFirst({
-        where: { uuid },
+        where: { user_id },
     });
     if (!cart) {
         throw new Error('Cart not found');

@@ -3,8 +3,8 @@ const { success, error } = require('../utils/response');
 
 const getCart = async (req, res) => {
     try {
-        const { uuid } = req.params;
-        const cart = await cartService.getCart(uuid);
+        const { user_id } = req.params;
+        const cart = await cartService.getCart(user_id);
         return success(res, cart, 'Cart retrieved successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
@@ -13,7 +13,7 @@ const getCart = async (req, res) => {
 
 const addItem = async (req, res) => {
     try {
-        const item = await cartService.addItem(req.user.uuid, req.body);
+        const item = await cartService.addItemToCart(req.user.uuid, req.body);
         return success(res, item, 'Item added to cart successfully', 201);
     } catch (err) {
         return error(res, err.message, 500);
@@ -22,9 +22,9 @@ const addItem = async (req, res) => {
 
 const updateItem = async (req, res) => {
     try {
-        const { uuid, item_id } = req.params;
+        const { id } = req.params;
         const { quantity } = req.body;
-        const item = await cartService.updateCartItem(uuid, Number(item_id), quantity);
+        const item = await cartService.updateCartItem(req.user.uuid, Number(id), quantity);
         return success(res, item, 'Cart item updated successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
@@ -33,8 +33,8 @@ const updateItem = async (req, res) => {
 
 const removeItem = async (req, res) => {
     try {
-        const { uuid, item_id } = req.params;
-        await cartService.removeCartItem(uuid, Number(item_id));
+        const { id } = req.params;
+        await cartService.removeCartItem(req.user.uuid, Number(id));
         return success(res, null, 'Cart item removed successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
@@ -48,7 +48,7 @@ const clearCart = async (req, res) => {
         return success(res, null, 'Cart cleared successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
-    }   
+    }
 }
 
 module.exports = {
