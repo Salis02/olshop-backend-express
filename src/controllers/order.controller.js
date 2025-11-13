@@ -13,7 +13,7 @@ const createOrder = async (req, res) => {
 
 const getOrders = async (req, res) => {
     try {
-        const orders = await orderService.getOrders(req.user.uuid);
+        const orders = await orderService.getOrders(req.uuid);
         return success(res, orders, 'Orders retrieved successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);

@@ -1,9 +1,10 @@
+const { id } = require('zod/locales');
 const prisma = require('../prisma/client');
 
-const createOrder = async (uuid, shipping_address_id) => {
+const createOrder = async (user_id, shipping_address_id) => {
     // Get cart
     const cart = await prisma.cart.findFirst({
-        where: { uuid },
+        where: { user_id },
         include: {
             items: true
         }
@@ -24,13 +25,13 @@ const createOrder = async (uuid, shipping_address_id) => {
     // Create order + order items
     const order = await prisma.order.create({
         data: {
-            uuid,
+            user_id,
             order_code: orderCode,
             total_price,
             discount_total: 0,
             shipping_fee: 0,
             grand_total: total_price,
-            payment_status: 'PENDING',
+            payment_status: 'pending',
             fulfillment_status: 'unfulfilled',
             shipping_address_id,
             items: {
@@ -52,23 +53,74 @@ const createOrder = async (uuid, shipping_address_id) => {
     });
 }
 
-const getOrders = async (uuid) => {
+const getOrders = async (user_id) => {
     return await prisma.order.findMany({
-        where: { uuid },
-        include: { items: true },
+        where: { user_id },
+        select: {
+            uuid: true,
+            order_code: true,
+            grand_total: true,
+            payment_status: true,
+            fulfillment_status: true,
+            created_at: true,
+            items: {
+                select: {
+                    quantity: true,
+                    price: true,
+                    product: {
+                        select: {
+                            name: true,
+                        }
+                    }
+                }
+            },
+        },
         orderBy: { created_at: 'desc' }
     });
 }
 
-const getOrderDetails = async (userId, uuid) => {
-    const order = await prisma.order.findUnique({
-        where: { uuid },
-        include: { items: true }
-    })
+const getOrderDetails = async (user_id, order_uuid) => {
+    const order = await prisma.order.findFirst({
+        where: {
+            uuid: order_uuid,
+            user_id
+        },
+        include: {
+            items: {
+                include: {
+                    product: {
+                        select: {
+                            uuid: true,
+                            name: true,
+                            price: true,
+                        },
+                    },
+                    variant: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    },
+                },
+            },
+            address: {
+                select: {
+                    id: true,
+                    label: true,
+                    recipient_name: true,
+                    address_line: true,
+                    city: true,
+                    province: true,
+                    postal_code: true
+                }
+            }
+        }
+    });
 
-    if (!order || order.uuid !== userId) {
+    if (!order) {
         throw new Error('Order not found');
     }
+    return order;
 }
 
 module.exports = {
