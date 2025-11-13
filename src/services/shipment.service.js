@@ -86,3 +86,9 @@ const updateShipmentStatus = async (id, status) => {
 
     return updated
 }
+
+module.exports = [
+    creteShipment,
+    getShipments,
+    updateShipmentStatus,
+]
