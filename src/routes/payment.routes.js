@@ -4,11 +4,11 @@ const authMiddleware = require('../middlewares/auth.middleware');
 const paymentController = require('../controllers/payment.controller');
 
 
-router.get('/', authMiddleware, paymentController.getPayments);
+router.get('/', authMiddleware, paymentController.getPayment);
 router.get('/:id', authMiddleware, paymentController.getPaymentDetail);
 router.post('/', authMiddleware, paymentController.createPayment);
 
 //Admin
-router.get('/:id/status', authMiddleware, paymentController.updateStatus);
+router.put('/:id/status', authMiddleware, paymentController.updateStatus);
 
 module.exports = router

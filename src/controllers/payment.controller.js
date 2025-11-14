@@ -1,4 +1,3 @@
-const { user } = require('../prisma/client')
 const paymentService = require('../services/payment.service')
 const { success, error } = require('../utils/response')
 
@@ -42,9 +41,9 @@ const updateStatus = async (req, res) => {
     }
 }
 
-module.exports = [
+module.exports = {
     createPayment,
     getPayment,
     getPaymentDetail,
     updateStatus
-];
+};
