@@ -9,7 +9,7 @@ const productRoutes = require('./routes/product.routes.js');
 const orderRoutes = require('./routes/order.routes.js');
 const cartRoutes = require('./routes/cart.routes.js');
 const paymentRoutes = require('./routes/payment.routes.js')
-const shipmentRoutes = require('./routes/')
+const shipmentRoutes = require('./routes/shipment.routes.js')
 
 const app = express();
 
