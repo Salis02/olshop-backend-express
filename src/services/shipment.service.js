@@ -87,8 +87,8 @@ const updateShipmentStatus = async (id, status) => {
     return updated
 }
 
-module.exports = [
+module.exports = {
     creteShipment,
     getShipments,
     updateShipmentStatus,
-]
+}
