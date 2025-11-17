@@ -82,10 +82,22 @@ const updatePaymentStatus = async (id, status, paid_at = null) => {
         throw new Error("Payment not found");
     }
 
-    return await prisma.payment.update({
+    const updated = await prisma.payment.update({
         where: { id },
         data: { status, paid_at }
     })
+
+    // sync status change dengan order
+    await prisma.update({
+        where: {
+            uuid: payment.order_id
+        },
+        data: {
+            payment_status: status
+        }
+    })
+
+    return updated
 }
 
 module.exports = {
