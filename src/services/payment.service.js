@@ -19,7 +19,7 @@ const createPayment = async (user_id, data) => {
         where: { order_id }
     })
 
-    if (!existingOrder) {
+    if (existingOrder) {
         throw new Error('Payment already exists for this order!')
     }
 
@@ -87,9 +87,9 @@ const updatePaymentStatus = async (id, status, paid_at = null) => {
     })
 }
 
-module.exports = [
+module.exports = {
     createPayment,
     getPayment,
     getPaymentDetail,
     updatePaymentStatus
-]
+}
