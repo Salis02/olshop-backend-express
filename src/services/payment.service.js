@@ -63,7 +63,7 @@ const getPaymentDetail = async (user_id, id) => {
         }
     })
 
-    if (!payment) {
+    if (!payment || payment.order.user_id !== user_id) {
         throw new Error("Payment not found");
     }
 
