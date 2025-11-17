@@ -88,7 +88,7 @@ const updatePaymentStatus = async (id, status, paid_at = null) => {
     })
 
     // sync status change dengan order
-    await prisma.update({
+    await prisma.order.update({
         where: {
             uuid: payment.order_id
         },

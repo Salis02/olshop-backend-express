@@ -1,6 +1,6 @@
 const prisma = require('../prisma/client')
 
-const creteShipment = async (order_id, data) => {
+const createShipment = async (order_id, data) => {
     const { courier, tracking_number } = data
 
     const order = await prisma.order.findUnique({
@@ -18,7 +18,7 @@ const creteShipment = async (order_id, data) => {
             order_id,
             courier,
             tracking_number,
-            status: 'pending'
+            status: 'unfulfilled'
         }
     })
 
@@ -88,7 +88,7 @@ const updateShipmentStatus = async (id, status) => {
 }
 
 module.exports = {
-    creteShipment,
+    createShipment,
     getShipments,
     updateShipmentStatus,
 }
