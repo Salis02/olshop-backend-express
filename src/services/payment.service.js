@@ -70,6 +70,7 @@ const getPaymentDetail = async (user_id, id) => {
     return payment
 }
 
+// Manual update payment status
 const updatePaymentStatus = async (id, status, paid_at = null) => {
     const payment = await prisma.payment.findUnique({
         where: {
