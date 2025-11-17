@@ -41,7 +41,7 @@ const getShipments = async (user_id) => {
             order: { user_id }
         },
         include: {
-            order_id: true,
+            order: true,
         },
         orderBy: {
             created_at: 'desc'
