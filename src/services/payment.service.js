@@ -23,7 +23,7 @@ const createPayment = async (user_id, data) => {
         throw new Error('Payment already exists for this order!')
     }
 
-    // Create payment
+    // Create payment, default still pending cause we will integrating with midtrans or other providers
     const payment = await prisma.payment.create({
         data: {
             order_id,
