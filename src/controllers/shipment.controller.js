@@ -23,7 +23,7 @@ const updateStatus = async (req, res) => {
     try {
         const { id } = req.params
         const { status } = req.body
-        const shipment = await shipmentService.updateStatus(Number(id), status)
+        const shipment = await shipmentService.updateShipmentStatus(Number(id), status)
         return success(res, shipment, 'Shipment updated successfully', 201)
     } catch (err) {
         return error(res, err.message)
