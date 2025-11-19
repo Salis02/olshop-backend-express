@@ -41,3 +41,9 @@ const getUserWishlist = async (user_id) => {
         }
     })
 }
+
+module.exports = {
+    add,
+    remove,
+    getUserWishlist
+}

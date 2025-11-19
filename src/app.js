@@ -11,6 +11,7 @@ const cartRoutes = require('./routes/cart.routes.js');
 const paymentRoutes = require('./routes/payment.routes.js')
 const shipmentRoutes = require('./routes/shipment.routes.js')
 const reviewRoutes = require('../src/routes/review.routes.js')
+const wishlistRoutes = require('../src/routes/wishlist.routes.js')
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/payments', paymentRoutes)
 app.use('/api/shipments', shipmentRoutes)
 app.use('/api/reviews', reviewRoutes)
+app.use('/api/wishlist', wishlistRoutes)
 
 // app.use('/api/public', publicRoutes);
 
