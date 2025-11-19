@@ -20,7 +20,7 @@ const createReview = async (user_id, data) => {
             product_id,
             order: {
                 user_id,
-                payment_status: 'paid'
+                payment_status: 'success'
             }
         }
     })
@@ -36,7 +36,7 @@ const createReview = async (user_id, data) => {
         }
     })
 
-    if (!existing) {
+    if (existing) {
         throw new Error("You already review this product");
     }
 
@@ -56,7 +56,12 @@ const getProductReviews = async (product_id) => {
             product_id
         },
         include: {
-            user: true
+            user: {
+                select: {
+                    uuid: true,
+                    name: true
+                }
+            }
         },
         orderBy: {
             created_at: 'desc'

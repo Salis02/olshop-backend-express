@@ -12,7 +12,7 @@ const paymentRoutes = require('./routes/payment.routes.js')
 const shipmentRoutes = require('./routes/shipment.routes.js')
 const reviewRoutes = require('../src/routes/review.routes.js')
 const wishlistRoutes = require('../src/routes/wishlist.routes.js')
-const couponRoutes = require('../src/routes/coupun.routes.js')
+const couponRoutes = require('../src/routes/coupon.routes.js')
 
 const app = express();
 
