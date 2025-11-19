@@ -1,43 +1,54 @@
 const prisma = require('../prisma/client')
 
-const createReview = async (user_id, data) => {
-    const { product_id, rating, comment } = data
-
-    // Check product data
+/**
+ * Shared validation: cek apakah product valid
+ */
+const checkProduct = async (product_id) => {
     const product = await prisma.product.findUnique({
-        where: {
-            uuid: product_id
-        }
+        where: { uuid: product_id }
     })
+    if (!product) throw new Error("Product not found")
+    return product
+}
 
-    if (!product) {
-        throw new Error("Product not found");
-    }
-
-    // Check user has paid product
+/**
+ * Shared validation: cek apakah user pernah membeli produk
+ */
+const checkUserPurchased = async (user_id, product_id) => {
     const hasOrdered = await prisma.orderItem.findFirst({
         where: {
             product_id,
             order: {
                 user_id,
-                payment_status: 'success'
+                payment_status: "success"
             }
         }
     })
 
     if (!hasOrdered) {
-        throw new Error("You only can review purchased products");
+        throw new Error("You only can review purchased products")
     }
 
-    // Cek user already review
+    return true
+}
+
+/**
+ * CREATE REVIEW
+ */
+const createReview = async (user_id, data) => {
+    const { product_id, rating, comment } = data
+
+    // Validasi product & pembelian
+    await checkProduct(product_id)
+    await checkUserPurchased(user_id, product_id)
+
+    // Cek user sudah review belum
     const existing = await prisma.review.findFirst({
-        where: {
-            product_id, user_id
-        }
+        where: { product_id, user_id }
     })
 
     if (existing) {
-        throw new Error("You already review this product");
+        throw new Error("You already reviewed this product")
     }
 
     return await prisma.review.create({
@@ -50,11 +61,41 @@ const createReview = async (user_id, data) => {
     })
 }
 
+/**
+ * UPDATE REVIEW (BEST PRACTICE)
+ */
+const updateReview = async (user_id, data) => {
+    const { product_id, rating, comment } = data
+
+    // Validasi product & purchase
+    await checkProduct(product_id)
+    await checkUserPurchased(user_id, product_id)
+
+    // Cek apakah review ada
+    const existing = await prisma.review.findFirst({
+        where: { product_id, user_id }
+    })
+
+    if (!existing) {
+        throw new Error("You haven't reviewed this product")
+    }
+
+    // Update hanya kolom yang diperlukan
+    return await prisma.review.update({
+        where: { id: existing.id },
+        data: {
+            rating,
+            comment
+        }
+    })
+}
+
+/**
+ * GET PRODUCT REVIEWS
+ */
 const getProductReviews = async (product_id) => {
     return await prisma.review.findMany({
-        where: {
-            product_id
-        },
+        where: { product_id },
         include: {
             user: {
                 select: {
@@ -63,13 +104,12 @@ const getProductReviews = async (product_id) => {
                 }
             }
         },
-        orderBy: {
-            created_at: 'desc'
-        }
+        orderBy: { created_at: "desc" }
     })
 }
 
 module.exports = {
     createReview,
+    updateReview,
     getProductReviews
 }

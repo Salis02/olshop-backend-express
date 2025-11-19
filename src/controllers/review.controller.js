@@ -11,6 +11,16 @@ const createReview = async (req, res) => {
 
 }
 
+const updateReview = async (req, res) => {
+    try {
+        const review = await reviewService.updateReview(req.user.uuid, req.body)
+        return success(res, review, 'Review updated successfully', 200)
+    } catch (err) {
+        return error(res, err.message)
+    }
+}
+
+
 const getReview = async (req, res) => {
     try {
         const review = await reviewService.getProductReviews(req.params.product_id)
@@ -22,5 +32,6 @@ const getReview = async (req, res) => {
 
 module.exports = {
     createReview,
+    updateReview,
     getReview
 }
