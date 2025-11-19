@@ -52,6 +52,10 @@ const validateCoupun = async (code, user_id) => {
         throw new Error("Coupun expired");
     }
 
+    if (coupun.current_usage >= coupun.max_usage) {
+        throw new Error("Coupun usage limit reachede");
+    }
+
     return coupun
     // (Optional) cek kuota penggunaan user
     // const used = await prisma.order.count({

@@ -1,7 +1,7 @@
-const { id } = require('zod/locales');
 const prisma = require('../prisma/client');
+const couponService = require('../services/coupun.service')
 
-const createOrder = async (user_id, shipping_address_id) => {
+const createOrder = async (user_id, shipping_address_id, coupon_code = null) => {
     // Get cart
     const cart = await prisma.cart.findFirst({
         where: { user_id },
@@ -18,6 +18,33 @@ const createOrder = async (user_id, shipping_address_id) => {
         (sum, item) => sum + item.price_snapshot * item.quantity,
         0
     );
+
+    // Coupun application
+    let coupon = null
+    let discount_total = 0
+
+    if (coupon_code) {
+        coupon = await couponService.validateCoupun(coupon_code, user_id)
+
+        // Minimum order
+        if (coupon.min_order && total_price < coupon.min_order) throw new Error(`Minimun order for coupun is ${coupon.min_order}`);
+
+        // Calculate discount
+        if (coupon.discount_type === 'percentage') {
+            discount_total = Math.floor(total_price * (coupon.value / 100))
+        } else {
+            discount_total = coupon.value
+        }
+
+        // Prevent discount > total
+        if (discount_total > total_price) {
+            discount_total = total_price
+        }
+    }
+
+    // Final total
+    const shipping_fee = 0;
+    const grand_total = total_price - discount_total + shipping_fee
 
     // Create order code
     const orderCode = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
@@ -46,6 +73,20 @@ const createOrder = async (user_id, shipping_address_id) => {
         },
         include: { items: true }
     });
+
+    // Increment coupun usage
+    if (coupon) {
+        await prisma.coupon.update({
+            where: {
+                id: coupon.id
+            },
+            data: {
+                current_usage: {
+                    increment: 1
+                }
+            }
+        })
+    }
 
     // Clear cart
     return await prisma.cartItem.deleteMany({

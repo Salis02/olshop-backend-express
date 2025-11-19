@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "dotenv -e .env -- npx prisma migrate dev",
     "db:seed": "node prisma/seed.js",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
@@ -25,6 +25,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "dotenv-cli": "^11.0.0",
     "nodemon": "^3.1.10"
   }
 }
