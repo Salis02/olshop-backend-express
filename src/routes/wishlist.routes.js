@@ -2,7 +2,6 @@ const express = require('express')
 const router = express.Router()
 const authMiddleware = require('../middlewares/auth.middleware')
 const wishlistController = require('../controllers/wishlist.controlle')
-const { route } = require('./public.routes')
 
 router.get('/', authMiddleware, wishlistController.getUserWishlist)
 router.post('/', authMiddleware, wishlistController.addWishlist)
