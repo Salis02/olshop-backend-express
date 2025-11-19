@@ -12,7 +12,7 @@ const addWishlist = async (req, res) => {
 
 const removeWishlist = async (req, res) => {
     try {
-        const wishlist = await wishlistService.remove(req.user.uuid, req.body.product_id)
+        const wishlist = await wishlistService.remove(req.user.uuid, req.params.product_id)
         return success(res, wishlist, 'Wishlist has been removed', 200)
     } catch (err) {
         return error(res, err.message)

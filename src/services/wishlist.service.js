@@ -7,7 +7,7 @@ const add = async (user_id, product_id) => {
         }
     })
 
-    if (!wishlist) {
+    if (wishlist) {
         throw new Error("Wishlist is already exist!");
     }
 
