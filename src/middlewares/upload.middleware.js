@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
 
 // File extension validation
 const fileFilter = (req, file, cb) => {
-    const allowed = ['images/jpeg', 'images/jpg', 'images/png', 'image/webp'];
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
     if (!allowed.includes(file.mimetype)) {
         return cb(new Error('File type not allowed'), false);
@@ -27,8 +27,8 @@ const limit = {
     fileSize: 5 * 1024 * 1024,
 };
 
-module.exports = {
+module.exports = multer({
     storage,
     fileFilter,
     limit
-}
+})
