@@ -1,6 +1,5 @@
 const slugify = require('slugify');
 const prisma = require('../prisma/client');
-const { success, error } = require('../utils/response');
 
 
 const getAllProducts = async (filters = {}) => {
