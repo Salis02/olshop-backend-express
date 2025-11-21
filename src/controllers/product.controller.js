@@ -44,12 +44,29 @@ const update = async (req, res) => {
     }
 }
 
-const remove = async (req, res) => {
+const softDelete = async (req, res) => {
     try {
-        await productService.deleteProduct(req.params.uuid);
+        await productService.softDeleteProduct(req.params.uuid);
         return success(res, productService, 'Product turn-off successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
+    }
+}
+
+const restore = async (req, res) => {
+    try {
+        const product = await productService.restoreProduct(req.params.uuid)
+        return success(res, product, 'Product restored successfully', 200)
+    } catch (err) {
+        return error(res, err.message)
+    }
+}
+
+const forceDelete = async (req, res) => {
+    try {
+        await productService.forceDelete(req.params.uuid)
+    } catch (err) {
+        return err(res, err.message)
     }
 }
 
@@ -58,5 +75,7 @@ module.exports = {
     show,
     create,
     update,
-    remove,
+    softDelete,
+    restore,
+    forceDelete
 };

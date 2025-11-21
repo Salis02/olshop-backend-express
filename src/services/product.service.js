@@ -3,27 +3,47 @@ const prisma = require('../prisma/client');
 
 
 const getAllProducts = async (filters = {}) => {
+    let {
+        search,
+        category_id,
+        sort = 'created_at',
+        order = 'desc',
+        includeDeleted = false
+    } = filters;
     const where = {};
 
-    if (filters.categoryId) {
-        where.categoryId = Number(filters.categoryId);
-    }
-    if (filters.search) {
-        where.name = {
-            contains: filters.search,
-            mode: 'insensitive',
-        };
+    if (!includeDeleted) {
+        where.deleted_at = null
     }
 
+    if (search) {
+        where.name = {
+            contains: search,
+            mode: 'insensitive'
+        }
+    }
+
+    if (category_id) {
+        where.category_id = Number(category_id);
+    }
+
+    const validSort = ['name', 'price', 'created_at', 'updated_at', 'stock'];
+
+    if (!validSort.includes(sort)) sort = 'created_at';
+
+    const validOrder = ['asc', 'desc'];
+
+    if (!validOrder.includes(order)) order = 'desc'
+
     return await prisma.product.findMany({
-        where: {
-            deleted_at: null
-        },
+        where,
         include: {
             category: true,
             images: true
         },
-        orderBy: { created_at: 'desc' }
+        orderBy: {
+            [sort]: order
+        }
     });
 }
 
@@ -95,7 +115,7 @@ const updateProduct = async (uuid, data, userId = null) => {
     });
 }
 
-const deleteProduct = async (uuid, userId = null) => {
+const softDelete = async (uuid, userId = null) => {
     const product = await prisma.product.findUnique({ where: { uuid } });
     if (!product) {
         throw new Error('Product not found');
@@ -109,10 +129,50 @@ const deleteProduct = async (uuid, userId = null) => {
     });
 }
 
+const restoreProduct = async (uuid) => {
+    const product = await prisma.product.findUnique({
+        where: {
+            uuid
+        }
+    })
+
+    if (!product) throw new Error("Product not found");
+
+    if (product.deleted_at === null) throw new Error("Product is not deleted");
+
+    return await prisma.product.update({
+        where: {
+            uuid
+        },
+        data: {
+            deleted_at: null
+        }
+    })
+}
+
+const forceDelete = async (uuid) => {
+    const product = await prisma.product.findUnique({
+        where: {
+            uuid
+        }
+    })
+
+    if (!product) throw new Error("Product not found");
+
+    return await prisma.product.delete({
+        where: {
+            uuid
+        }
+    })
+
+}
+
 module.exports = {
     getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    softDelete,
+    restoreProduct,
+    forceDelete
 };

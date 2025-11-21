@@ -12,7 +12,15 @@ router.get('/:uuid', productController.show);
 //Protected routes
 router.post('/', authMiddleware, upload.none(), productController.create);
 router.put('/:uuid', authMiddleware, productController.update);
-router.delete('/:uuid', authMiddleware, productController.remove);
+
+//Soft and restore product delete
+router.delete('/:uuid', authMiddleware, productController.softDelete);
+router.patch('/:uuid/restore', authMiddleware, productController.restore);
+
+// Force delete permanently
+router.delete('/:uuid/force', authMiddleware, productController.forceDelete);
+
+
 
 // Nested Images Routes
 router.use('/:uuid/images', require('./productImage.routes'))
