@@ -8,6 +8,8 @@ const getAll = async (productId) => {
         }
     })
 
+    if(!variant) throw new Error("Variant product not found");
+
     return variant
 }
 
@@ -22,6 +24,8 @@ const create = async (productId, data) => {
             stock_adjustment: stock_adjustment || null
         }
     })
+
+    return variant
 }
 
 const update = async (id, data) => {
