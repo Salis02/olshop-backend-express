@@ -65,24 +65,24 @@ const createProduct = async (data, userId) => {
     });
 }
 
-const updateProduct = async (id, data) => {
-    const product = await prisma.product.findUnique({ where: { id } });
+const updateProduct = async (uuid, data) => {
+    const product = await prisma.product.findUnique({ where: { uuid } });
     if (!product) {
         throw new Error('Product not found');
     }
 
     return await prisma.product.update({
-        where: { id },
+        where: { uuid },
         data,
     });
 }
 
-const deleteProduct = async (id) => {
-    const product = await prisma.product.findUnique({ where: { id } });
+const deleteProduct = async (uuid) => {
+    const product = await prisma.product.findUnique({ where: { uuid } });
     if (!product) {
         throw new Error('Product not found');
     }
-    return await prisma.product.delete({ where: { id } });
+    return await prisma.product.delete({ where: { uuid } });
 }
 
 module.exports = {

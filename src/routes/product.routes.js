@@ -11,7 +11,10 @@ router.get('/:uuid', productController.show);
 
 //Protected routes
 router.post('/', authMiddleware, upload.none(), productController.create);
-router.put('/:id', authMiddleware, productController.update);
-router.delete('/:id', authMiddleware, productController.remove);
+router.put('/:uuid', authMiddleware, productController.update);
+router.delete('/:uuid', authMiddleware, productController.remove);
+
+// Nested Images Routes
+router.use('/:uuid/images', require('./productImage.routes'))
 
 module.exports = router;

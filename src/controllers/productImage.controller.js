@@ -14,7 +14,7 @@ const uploadProductImage = async (req, res) => {
 
 const removeProductImage = async (req, res) => {
     try {
-        const product = await productImageService.deleteImage(Number(req.params.imageId))
+        await productImageService.deleteImage(Number(req.params.imageId))
         return success(res, null, 'Image product removed successfully', 200)
     } catch (err) {
         return error(res, err.message)

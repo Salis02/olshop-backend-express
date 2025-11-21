@@ -37,7 +37,7 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const product = await productService.updateProduct(Number(req.params.id), req.body);
+        const product = await productService.updateProduct(req.params.uuid, req.body);
         return success(res, product, 'Product updated successfully', 201);
     } catch (err) {
         return error(res, err.message, 500);
@@ -46,7 +46,7 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        await productService.deleteProduct(Number(req.params.id));
+        await productService.deleteProduct(req.params.uuid);
         return success(res, null, 'Product deleted successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
