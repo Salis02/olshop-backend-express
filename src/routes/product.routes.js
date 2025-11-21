@@ -20,8 +20,6 @@ router.patch('/:uuid/restore', authMiddleware, productController.restore);
 // Force delete permanently
 router.delete('/:uuid/force', authMiddleware, productController.forceDelete);
 
-
-
 // Nested Images Routes
 router.use('/:uuid/images', require('./productImage.routes'))
 
