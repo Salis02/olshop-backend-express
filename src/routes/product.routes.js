@@ -8,7 +8,7 @@ const productController = require('../controllers/product.controller');
 // Nested Images, Variants, and Attributes Routes
 router.use('/:uuid/images', require('./productImage.routes'))
 router.use('/:uuid/variants', require('./productVariant.routes'))
-router.use('/:uuid/attributes', require('./productAtrribute.routes'))
+router.use('/:uuid/attributes', require('./productAttribute.routes'))
 
 //Public routes
 router.get('/', productController.index);
