@@ -5,6 +5,11 @@ const upload = multer()
 const authMiddleware = require('../middlewares/auth.middleware');
 const productController = require('../controllers/product.controller');
 
+// Nested Images, Variants, and Attributes Routes
+router.use('/:uuid/images', require('./productImage.routes'))
+router.use('/:uuid/variants', require('./productVariant.routes'))
+router.use('/:uuid/attributes', require('./productAtrribute.routes'))
+
 //Public routes
 router.get('/', productController.index);
 router.get('/:uuid', productController.show);
@@ -19,8 +24,5 @@ router.patch('/:uuid/restore', authMiddleware, productController.restore);
 
 // Force delete permanently
 router.delete('/:uuid/force', authMiddleware, productController.forceDelete);
-
-// Nested Images Routes
-router.use('/:uuid/images', require('./productImage.routes'))
 
 module.exports = router;
