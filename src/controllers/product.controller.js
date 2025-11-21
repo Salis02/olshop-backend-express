@@ -47,7 +47,7 @@ const update = async (req, res) => {
 const remove = async (req, res) => {
     try {
         await productService.deleteProduct(req.params.uuid);
-        return success(res, null, 'Product deleted successfully', 200);
+        return success(res, productService, 'Product turn-off successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
     }

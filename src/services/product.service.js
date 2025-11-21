@@ -16,7 +16,9 @@ const getAllProducts = async (filters = {}) => {
     }
 
     return await prisma.product.findMany({
-        where,
+        where: {
+            deleted_at: null
+        },
         include: {
             category: true,
             images: true
@@ -65,24 +67,46 @@ const createProduct = async (data, userId) => {
     });
 }
 
-const updateProduct = async (uuid, data) => {
+const updateProduct = async (uuid, data, userId = null) => {
     const product = await prisma.product.findUnique({ where: { uuid } });
     if (!product) {
         throw new Error('Product not found');
     }
+
+    const { name, price, stock, description, category_id } = data
+
+    const updateProduct = {}
+
+    if (name) {
+        updateProduct.name = name
+        updateProduct.slug = slugify(name, { lower: true, strict: true })
+    }
+
+    if (price !== undefined) updateProduct.price = Number(price)
+    if (stock !== undefined) updateProduct.stock = Number(stock)
+    if (description !== undefined) updateProduct.description = description
+    if (category_id !== undefined) updateProduct.category_id = category_id
+
+    if (userId) updateProduct.update_by = userId
 
     return await prisma.product.update({
         where: { uuid },
-        data,
+        data: updateProduct
     });
 }
 
-const deleteProduct = async (uuid) => {
+const deleteProduct = async (uuid, userId = null) => {
     const product = await prisma.product.findUnique({ where: { uuid } });
     if (!product) {
         throw new Error('Product not found');
     }
-    return await prisma.product.delete({ where: { uuid } });
+    return await prisma.product.update({
+        where: { uuid },
+        data: {
+            deleted_at: new Date(),
+            updated_by: userId || product.updated_by
+        }
+    });
 }
 
 module.exports = {
