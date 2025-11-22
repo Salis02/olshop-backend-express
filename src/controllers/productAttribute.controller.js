@@ -23,7 +23,7 @@ const createAttribute = async (req, res) => {
 
 const updateAttribute = async (req, res) => {
     try {
-        const attribute = await productAtrributeService.update(Number(req.params.attributeId), req.body)
+        const attribute = await productAtrributeService.update(Number(req.params.id), req.body)
         return success(res, attribute, 'Attribute product updated successfully', 201)
     } catch (err) {
         return error(res, err.message)
@@ -32,7 +32,7 @@ const updateAttribute = async (req, res) => {
 
 const removeAttribute = async (req, res) => {
     try {
-        await productAtrributeService.remove(Number(req.params.attributeId))
+        await productAtrributeService.remove(Number(req.params.id))
         return success(res, null, 'Attribute product removed successfully', 200)
     } catch (err) {
         return error(res, err.message)

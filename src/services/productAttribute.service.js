@@ -16,7 +16,7 @@ const create = async (productId, data) => {
     const { key, value } = data
 
     const attribute = await prisma.productAttribute.create({
-        where: {
+        data: {
             product_id: productId,
             key: key,
             value: value
@@ -27,6 +27,14 @@ const create = async (productId, data) => {
 }
 
 const update = async (id, data) => {
+    const attribute = await prisma.productAttribute.findUnique({
+        where: {
+            id
+        }
+    })
+
+    if (!attribute) throw new Error("Attribute not found!");
+
     return await prisma.productAttribute.update({
         where: {
             id
@@ -36,6 +44,14 @@ const update = async (id, data) => {
 }
 
 const remove = async (id) => {
+    const attribute = await prisma.productAttribute.findUnique({
+        where: {
+            id
+        }
+    })
+
+    if (!attribute) throw new Error("Attribute not found!");
+
     return await prisma.productAttribute.delete({
         where: {
             id
