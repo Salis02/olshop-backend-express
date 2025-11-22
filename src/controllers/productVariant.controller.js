@@ -23,7 +23,7 @@ const createVariant = async (req, res) => {
 
 const updateVariant = async (req, res) => {
     try {
-        const variant = await productVariantService.update(Number(req.param.variantId), req.body)
+        const variant = await productVariantService.update(Number(req.params.id), req.body)
         return success(res, variant, 'Variant product updated successfully')
     } catch (err) {
         return error(res, err.message)
@@ -32,7 +32,7 @@ const updateVariant = async (req, res) => {
 
 const removeVariant = async (req, res) => {
     try {
-        await productVariantService.remove(Number(req.params.variantId))
+        await productVariantService.remove(Number(req.params.id))
         return success(res, null, 'Variant product removed successfully', 200)
     } catch (err) {
         return error(res, err.message)

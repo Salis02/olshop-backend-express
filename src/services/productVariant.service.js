@@ -8,7 +8,7 @@ const getAll = async (productId) => {
         }
     })
 
-    if(!variant) throw new Error("Variant product not found");
+    if (!variant) throw new Error("Variant product not found");
 
     return variant
 }
@@ -17,7 +17,7 @@ const create = async (productId, data) => {
     const { name, price_adjustment, stock_adjustment } = data
 
     const variant = await prisma.productVariant.create({
-        where: {
+        data: {
             product_id: productId,
             name,
             price_adjustment: price_adjustment || null,
@@ -31,7 +31,7 @@ const create = async (productId, data) => {
 const update = async (id, data) => {
     return await prisma.productVariant.update({
         where: {
-            id
+            id: Number(id)
         },
         data
     })
