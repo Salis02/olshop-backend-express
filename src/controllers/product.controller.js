@@ -3,7 +3,18 @@ const { success, error } = require('../utils/response');
 
 const index = async (req, res) => {
     try {
-        const products = await productService.getAllProducts(req.query);
+        const filters = {
+            search: req.query.search,
+            category_id: req.query.category_id,
+            sort: req.query.sort,
+            order: req.query.order,
+            page: req.query.page,
+            limit: req.query.limit,
+            minPrice: req.query.minPrice,
+            maxPrice: req.query.maxPrice,
+            rating: req.query.rating
+        }
+        const products = await productService.getAllProducts(filters);
         return success(res, products, 'Products retrieved successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
