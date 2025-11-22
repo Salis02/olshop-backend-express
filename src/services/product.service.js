@@ -39,7 +39,7 @@ const getAllProducts = async (filters = {}) => {
         where,
         include: {
             category: true,
-            images: true
+            images: true,
         },
         orderBy: {
             [sort]: order
@@ -52,7 +52,18 @@ const getProductById = async (uuid) => {
         where: { uuid },
         include: {
             category: true,
-            images: true
+            images: true,
+            variants: true,
+            attributes: true,
+            reviews: {
+                include: {
+                    user: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            }
         }
     });
 

@@ -29,6 +29,15 @@ const create = async (productId, data) => {
 }
 
 const update = async (id, data) => {
+    const variant = await prisma.productVariant.findUnique({
+        where: {
+            id
+        }
+    })
+
+    if (!variant) throw new Error("Variant not found!");
+
+
     return await prisma.productVariant.update({
         where: {
             id: Number(id)
@@ -38,6 +47,14 @@ const update = async (id, data) => {
 }
 
 const remove = async (id) => {
+    const variant = await prisma.productVariant.findUnique({
+        where: {
+            id
+        }
+    })
+
+    if (!variant) throw new Error("Variant not found!");
+
     return await prisma.productVariant.delete({
         where: {
             id
