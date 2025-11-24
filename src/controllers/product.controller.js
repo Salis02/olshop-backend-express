@@ -37,6 +37,15 @@ const show = async (req, res) => {
     }
 }
 
+const showSoftDelete = async (req, res) => {
+    try {
+        const product = await productService.getProductSoftDelete();
+        return success(res, product, 'Product with soft delete retrieved successfully', 200)
+    } catch (err) {
+        return error(res, err.message)
+    }
+}
+
 const create = async (req, res) => {
     try {
         const product = await productService.createProduct(req.body, req.user.uuid);
@@ -85,6 +94,7 @@ const forceDelete = async (req, res) => {
 module.exports = {
     index,
     show,
+    showSoftDelete,
     create,
     update,
     softDelete,

@@ -193,6 +193,15 @@ const getProductById = async (uuid) => {
     return product;
 }
 
+const getProductSoftDelete = async () => {
+    const product = await prisma.product.findMany({
+        where: {
+            deleted_at: { not: null }
+        }
+    })
+    return product
+}
+
 const createProduct = async (data, userId) => {
     const { name, price, stock, description, category_id } = data;
 
@@ -301,6 +310,7 @@ const forceDelete = async (uuid) => {
 module.exports = {
     getAllProducts,
     getProductById,
+    getProductSoftDelete,
     createProduct,
     updateProduct,
     softDelete,

@@ -10,8 +10,11 @@ router.use('/:uuid/images', require('./productImage.routes'))
 router.use('/:uuid/variants', require('./productVariant.routes'))
 router.use('/:uuid/attributes', require('./productAttribute.routes'))
 
-//Public routes
+// Public and softdelete routes
 router.get('/', productController.index);
+// Static route, always use 'soft-delete'
+router.get('/soft-delete', authMiddleware, productController.showSoftDelete)
+// Dynamic route, cause can receive many various of uuid
 router.get('/:uuid', productController.show);
 
 //Protected routes
