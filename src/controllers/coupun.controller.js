@@ -24,7 +24,7 @@ const createCoupun = async (req, res) => {
         const coupon = await couponService.create(req.body)
         return success(res, coupon, 'Coupun created successfully', 201)
     } catch (err) {
-        return error(res, err.message)
+        return error(res, err.message, 400)
     }
 }
 

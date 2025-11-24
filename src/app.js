@@ -32,7 +32,7 @@ app.use('/api/payments', paymentRoutes)
 app.use('/api/shipments', shipmentRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/wishlist', wishlistRoutes)
-app.use('/api/coupuns', couponRoutes)
+app.use('/api/coupons', couponRoutes)
 
 // app.use('/api/public', publicRoutes);
 
