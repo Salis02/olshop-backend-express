@@ -67,7 +67,22 @@ const update = async (id, data) => {
     })
 }
 
+const getOne = async (id) => {
+    const coupon = await prisma.coupon.findUnique({
+        where: { id }
+    })
+    if (!coupon) throw new Error("Coupun not found");
+
+    return coupon
+}
+
 const remove = async (id) => {
+    const coupon = await prisma.coupon.findUnique({
+        where: { id }
+    })
+
+    if (!coupon) throw new Error("Coupon not found");
+
     return await prisma.coupon.delete({
         where: { id }
     })
@@ -77,13 +92,6 @@ const getAll = async () => {
     return await prisma.coupon.findMany()
 }
 
-const getOne = async (id) => {
-    const coupon = prisma.coupon.findUnique({
-        where: { id }
-    })
-    if (!coupon) throw new Error("Coupun not found");
-
-}
 
 const validateCoupun = async (code, user_id) => {
     const coupun = await prisma.coupon.findUnique({

@@ -13,16 +13,20 @@ const createShipment = async (order_id, data) => {
         throw new Error('Order not found')
     }
 
+    if (order.payment_status !== 'success') {
+        throw new Error('Order cannot be shipped before payment success');
+    }
+
     const shipment = await prisma.shipment.create({
         data: {
             order_id,
             courier,
             tracking_number,
-            status: 'unfulfilled'
+            status: 'processing'
         }
     })
 
-    // Update order fulfillment_status => 'processing
+    // Update order fulfillment_status => 'processing'
     await prisma.order.update({
         where: {
             uuid: order_id
