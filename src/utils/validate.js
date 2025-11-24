@@ -18,7 +18,7 @@ const validateRequest = (schema, data) => {
             message = result.error.message;
         }
 
-        throw new Error(`Validation error: ${message}`);
+        throw new Error(message);
     }
 
     return result.data;
