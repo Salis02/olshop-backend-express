@@ -1,4 +1,4 @@
-const error = require('../utils/response')
+const { error } = require('../utils/response')
 
 const allowRoles = (...roles) => {
     return (req, res, next) => {
