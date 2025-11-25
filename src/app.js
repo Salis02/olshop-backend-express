@@ -14,6 +14,7 @@ const shipmentRoutes = require('./routes/shipment.routes.js')
 const reviewRoutes = require('../src/routes/review.routes.js')
 const wishlistRoutes = require('../src/routes/wishlist.routes.js')
 const couponRoutes = require('../src/routes/coupon.routes.js')
+const eventRoutes = require('../src/routes/event.routes.js')
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/shipments', shipmentRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/wishlist', wishlistRoutes)
 app.use('/api/coupons', couponRoutes)
+app.use('/api/events', eventRoutes)
 
 // app.use('/api/public', publicRoutes);
 

@@ -28,6 +28,14 @@ const update = async (id, data) => {
 }
 
 const remove = async (id) => {
+    const event = await prisma.findUnique({
+        where: {
+            id
+        }
+    })
+
+    if (!event) throw new Error("Event not found");
+
     return await prisma.event.update({
         where: {
             id
