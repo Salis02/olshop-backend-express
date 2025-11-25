@@ -62,7 +62,6 @@ const loginUser = async (data, ip) => {
     try {
         rateLimitLogin(ip);
     } catch (err) {
-        // lempar ulang sebagai error yang aman
         throw new Error(err.message);
     }
 
@@ -84,13 +83,13 @@ const loginUser = async (data, ip) => {
         throw new Error("Account is deleted");
     }
 
-    resetLoginAttempt(ip)
-
     //Cek password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
         throw new Error('Invalid email or password');
     }
+
+    resetLoginAttempt(ip)
 
     //Generate JWT Token
     const token = generateToken({
