@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const logger = require('./utils/logger.js')
 const publicRoutes = require('./routes/public.routes.js');
 const authRoutes = require('./routes/auth.routes.js');
 const userRoutes = require('./routes/user.routes.js');
@@ -19,6 +20,9 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+if (process.env.NODE_ENV === 'development') {
+    app.use(logger);
+}
 
 // Routes
 app.use('/api/auth', authRoutes);
