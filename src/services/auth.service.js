@@ -1,11 +1,17 @@
 const prisma = require('../prisma/client');
 const bcrypt = require('bcryptjs');
 const { generateToken } = require('../utils/jwt');
+const { rateLimitLogin, resetLoginAttempt, rateLimitRegister } = require('../utils/rateLimiter')
 const { validateRequest } = require('../utils/validate');
 const { registerSchema, loginSchema } = require('../validators/auth.validator')
 
-console.log('registerSchema type:', typeof registerSchema);
-const registerUser = async (data) => {
+const registerUser = async (data, ip) => {
+
+    try {
+        rateLimitRegister(ip)
+    } catch (err) {
+        throw new Error(err.message);
+    }
 
     //Validate input data
     const { name, email, password, phone } = validateRequest(registerSchema, data);
@@ -51,19 +57,34 @@ const registerUser = async (data) => {
     };
 }
 
-const loginUser = async (data) => {
+const loginUser = async (data, ip) => {
+
+    try {
+        rateLimitLogin(ip);
+    } catch (err) {
+        // lempar ulang sebagai error yang aman
+        throw new Error(err.message);
+    }
 
     //Validate input data
     const { email, password } = validateRequest(loginSchema, data);
 
     //Cari user berdasarkan email
     const user = await prisma.user.findUnique({
-        where: { email }
+        where: { email },
+        include: { role: true }
     });
+
     //Jika user tidak ditemukan, throw error
     if (!user) {
         throw new Error('Invalid email or password');
     }
+
+    if (user.deleted_at !== null) {
+        throw new Error("Account is deleted");
+    }
+
+    resetLoginAttempt(ip)
 
     //Cek password
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -72,7 +93,10 @@ const loginUser = async (data) => {
     }
 
     //Generate JWT Token
-    const token = generateToken({ uuid: user.uuid, role_id: user.role_id });
+    const token = generateToken({
+        uuid: user.uuid,
+        role_id: user.role.name
+    });
 
     return {
         token,
@@ -81,6 +105,7 @@ const loginUser = async (data) => {
             name: user.name,
             email: user.email,
             role_id: user.role_id,
+            role_name: user.role.name
         }
     }
 }

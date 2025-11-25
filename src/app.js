@@ -18,12 +18,13 @@ const eventRoutes = require('../src/routes/event.routes.js')
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
 if (process.env.NODE_ENV === 'development') {
     app.use(logger);
 }
+
+// Middleware
+app.use(cors());
+app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
