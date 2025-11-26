@@ -12,7 +12,8 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const data = await authService.loginUser(req.body)
+        const ip = req.ip || req.connection.remoteAddress || 'unknown;'
+        const data = await authService.loginUser(req.body, ip)
         return success(res, data, 'User logged in successfully', 200);
     } catch (err) {
         return error(res, err.message, 401);

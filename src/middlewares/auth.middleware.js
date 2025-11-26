@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { error} = require('../utils/response');
+const { error } = require('../utils/response');
 
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -8,12 +8,15 @@ const authMiddleware = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    if (!token) {
+
+    if (!token || token === 'undefined' || token === null) {
         return error(res, 'Token missing', 401);
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+            algorithms: ['HS256']
+        });
         req.user = decoded;
         next();
     } catch (err) {

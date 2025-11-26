@@ -1,7 +1,11 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
+if(!process.env.JWT_SECRET){
+    throw new Error("FATAL: JWT_SECRET is missing");
+}
+
+const JWT_SECRET = process.env.JWT_SECRET
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN
 
 const generateToken = (payload) => {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
