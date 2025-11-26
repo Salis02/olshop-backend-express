@@ -22,7 +22,7 @@ const updateEvent = async (req, res) => {
 const removeEvent = async (req, res) => {
     try {
         const event = await eventService.remove(Number(req.params.id))
-        return success(res, event, 'Event updated successfully', 200)
+        return success(res, event, 'Event turned-off successfully', 200)
     } catch (err) {
         return error(res, err.message)
     }

@@ -1,11 +1,35 @@
 const prisma = require('../prisma/client')
+const slugify = require('slugify')
 
 const create = async (data) => {
+
+    const { name, description, start_date, end_date, status } = data
+
     // Generate slug
-    data.slug = data.name.toLowerCase().replace(/ /g, '-')
+    const slug = slugify(name, {
+        lower: true,
+        strict: true,
+        replacement: '-',
+        trim: true
+    })
+
+    const exist = await prisma.event.findUnique({
+        where: {
+            slug: slug
+        }
+    })
+
+    if (exist) throw new Error("Slug already exist. Try to create another one");
 
     return await prisma.event.create({
-        data
+        data: {
+            name: name,
+            slug,
+            description,
+            start_date,
+            end_date,
+            status
+        }
     })
 }
 
@@ -16,7 +40,25 @@ const update = async (id, data) => {
     if (!exist) throw new Error("Event not found");
 
     if (data.name) {
-        data.slug = data.name.toLowerCase().replace(/ /g, '-')
+        const newSlug = slugify(data.name, {
+            lower: true,
+            strict: true,
+            replacement: '-',
+            trim: true
+        })
+
+        const slugExist = await prisma.event.findFirst({
+            where: {
+                slug: newSlug,
+                id: {
+                    not: id
+                }
+            }
+        })
+
+        if (slugExist) throw new Error("Slug already exist. Try to create another one");
+
+        data.slug = newSlug
     }
 
     return await prisma.event.update({
@@ -28,7 +70,7 @@ const update = async (id, data) => {
 }
 
 const remove = async (id) => {
-    const event = await prisma.findUnique({
+    const event = await prisma.event.findUnique({
         where: {
             id
         }
