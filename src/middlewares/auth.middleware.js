@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { error } = require('../utils/response');
+const { isTokenBlacklisted } = require('../utils/tokenBlacklist')
 
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -11,6 +12,10 @@ const authMiddleware = (req, res, next) => {
 
     if (!token || token === 'undefined' || token === null) {
         return error(res, 'Token missing', 401);
+    }
+
+    if(isTokenBlacklisted(token)){
+        return error(res, 'Token has been logged out', 401)
     }
 
     try {
