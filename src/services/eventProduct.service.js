@@ -1,9 +1,10 @@
 const prisma = require('../prisma/client')
+const AppError = require('../utils/AppError')
 
 const create = async (event_id, data) => {
 
     if (!data.product_id) {
-        throw new Error("Product id is required");
+        throw new AppError("Product id is required", 422);
     }
 
     const event = await prisma.event.findUnique({
@@ -14,7 +15,7 @@ const create = async (event_id, data) => {
         where: { uuid: data.product_id }
     })
 
-    if (!event && !product) throw new Error("Event or product not found");
+    if (!event && !product) throw new AppError("Event or product not found", 404);
 
     return await prisma.eventProduct.create({
         data: {
@@ -26,9 +27,9 @@ const create = async (event_id, data) => {
 }
 
 const remove = async (id) => {
-    const eventProduct = await prisma.eventProduct.findUnique({ where: id })
+    const eventProduct = await prisma.eventProduct.findUnique({ where: {id} })
 
-    if (!eventProduct) throw new Error("Event Product not found");
+    if (!eventProduct) throw new AppError("Event Product not found", 404);
 
     return await prisma.eventProduct.delete({
         where: { id }
@@ -42,7 +43,7 @@ const getByEvent = async (event_id) => {
         }
     })
 
-    if (!event) throw new Error("Detail event for this product not found");
+    if (!event) throw new AppError("Detail event for this product not found", 404);
 
     return await prisma.eventProduct.findMany({
         where: {

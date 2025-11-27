@@ -45,6 +45,10 @@ app.use('/api/events-products', eventProductRoutes)
 
 // app.use('/api/public', publicRoutes);
 
+const errorHandler = require('./middlewares/errorHandler.js')
+app.use(errorHandler
+    
+)
 app.get('/', (req, res) => {
     res.send('🛍️ Welcome to the Online Shop API');
 });
