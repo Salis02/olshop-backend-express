@@ -16,6 +16,7 @@ const wishlistRoutes = require('../src/routes/wishlist.routes.js')
 const couponRoutes = require('../src/routes/coupon.routes.js')
 const eventRoutes = require('../src/routes/event.routes.js')
 const eventProductRoutes = require('../src/routes/eventProduct.routes.js')
+const activityRoutes = require('../src/routes/activity.routes.js')
 
 const app = express();
 
@@ -42,12 +43,13 @@ app.use('/api/wishlist', wishlistRoutes)
 app.use('/api/coupons', couponRoutes)
 app.use('/api/events', eventRoutes)
 app.use('/api/events-products', eventProductRoutes)
+app.use('/api/activity', activityRoutes)
 
 // app.use('/api/public', publicRoutes);
 
 const errorHandler = require('./middlewares/errorHandler.js')
 app.use(errorHandler
-    
+
 )
 app.get('/', (req, res) => {
     res.send('🛍️ Welcome to the Online Shop API');
