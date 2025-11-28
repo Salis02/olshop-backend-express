@@ -54,6 +54,7 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
         data: {
             user_id,
             order_code: orderCode,
+            coupon_id: coupon,
             total_price,
             discount_total,
             shipping_fee,
@@ -89,9 +90,11 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
     }
 
     // Clear cart
-    return await prisma.cartItem.deleteMany({
+    await prisma.cartItem.deleteMany({
         where: { cart_id: cart.id }
     });
+
+    return order
 }
 
 const getOrders = async (user_id) => {
