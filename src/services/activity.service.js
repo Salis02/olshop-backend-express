@@ -20,10 +20,10 @@ const list = () => {
         include: {
             user: {
                 select: {
+                    name: true,
                     role: {
                         select: {
                             name: true,
-                            description: true
                         }
                     }
                 }
