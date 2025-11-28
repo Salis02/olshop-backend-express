@@ -1,6 +1,7 @@
 const prisma = require('../prisma/client');
 const bcrypt = require('bcryptjs');
 const { validateRequest } = require('../utils/validate');
+const log = require('../services/activity.service')
 const { updateProfileSchema, updatePasswordSchema } = require('../validators/user.validator');
 
 const getProfile = async (uuid) => {
@@ -40,6 +41,15 @@ const updateProfile = async (uuid, data) => {
     })
     if (!updatedUser)
         throw new Error('User not found');
+
+    await log.create({
+        user_id: user.uuid,
+        action: 'Update Profile',
+        target_type: 'User',
+        target_id: uuid,
+        meta: data
+    })
+
     return updatedUser;
 }
 
@@ -58,6 +68,15 @@ const updatePassword = async (uuid, data) => {
         where: { uuid },
         data: { password: hashedPassword },
     });
+
+    await log.create({
+        user_id: user.uuid,
+        action: 'Update Password',
+        target_type: 'User',
+        target_id: uuid,
+        meta: data
+    })
+
     return true;
 }
 
