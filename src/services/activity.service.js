@@ -1,7 +1,7 @@
 const prisma = require('../prisma/client')
 
-const log = async (user_id, action, target_type, target_id, meta = {}) => {
-    return await prisma.activityLog.create({
+const create = async ({ user_id, action, target_type, target_id, meta }) => {
+    return prisma.activityLog.create({
         data: {
             user_id,
             action,
@@ -9,18 +9,27 @@ const log = async (user_id, action, target_type, target_id, meta = {}) => {
             target_id,
             meta
         }
-    })
-}
+    });
+};
 
-const list = async () => {
-    return await prisma.activityLog.findMany({
+const list = () => {
+    return prisma.activityLog.findMany({
         orderBy: {
             created_at: 'asc'
         },
         include: {
-            user: true
+            user: {
+                select: {
+                    role: {
+                        select: {
+                            name: true,
+                            description: true
+                        }
+                    }
+                }
+            }
         }
     })
 }
 
-module.exports = { log, list }
+module.exports = { list, create }

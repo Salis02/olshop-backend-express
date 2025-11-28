@@ -25,7 +25,7 @@ const getProfile = async (uuid) => {
     return user
 }
 
-const updateProfile = async (uuid, data) => {
+const updateProfile = async (uuid, data, actor) => {
 
     const { name, phone } = validateRequest(updateProfileSchema, data);
 
@@ -43,9 +43,9 @@ const updateProfile = async (uuid, data) => {
         throw new Error('User not found');
 
     await log.create({
-        user_id: user.uuid,
-        action: 'Update Profile',
-        target_type: 'User',
+        user_id: actor.uuid,
+        action: "Update Profile",
+        target_type: "User",
         target_id: uuid,
         meta: data
     })
@@ -72,7 +72,7 @@ const updatePassword = async (uuid, data) => {
     await log.create({
         user_id: user.uuid,
         action: 'Update Password',
-        target_type: 'User',
+        target_type: 'user',
         target_id: uuid,
         meta: data
     })

@@ -12,7 +12,7 @@ const getUserProfile = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
     try {
-        const data = await userService.updateProfile(req.user.uuid, req.body);
+        const data = await userService.updateProfile(req.user.uuid, req.body, req.user)
         return success(res, data, 'User profile updated successfully', 201);
     } catch (err) {
         return error(res, err.message, 400);
