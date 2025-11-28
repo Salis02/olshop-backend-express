@@ -1,7 +1,7 @@
 const AppError = require('../utils/AppError')
 
 module.exports = (err, req, res, next) => {
-    console.error('🔥 Global Error:', err)
+    console.error('Global Error:', err)
 
     // Prisma know error
     if (err.code === 'P2002') {
