@@ -1,10 +1,10 @@
 const prisma = require('../prisma/client')
 const slugify = require('slugify')
 const { validateRequest } = require('../utils/validate')
-const { createCoupunSchema } = require('../validators/coupon.validator')
+const { createCouponSchema } = require('../validators/coupon.validator')
 
 const create = async (data) => {
-    const { code, description, discount_type, value, max_usage, min_order, expires_at } = validateRequest(createCoupunSchema, data);
+    const { code, description, discount_type, value, max_usage, min_order, expires_at } = validateRequest(createCouponSchema, data);
 
     if (!code || code.trim() === "") {
         throw new Error("Coupon code is required");
@@ -34,7 +34,7 @@ const create = async (data) => {
     }
     const existCoupun = await prisma.coupon.findUnique({
         where: {
-            code
+            code: newCode
         }
     })
 
@@ -93,27 +93,32 @@ const getAll = async () => {
 }
 
 
-const validateCoupun = async (code, user_id) => {
-    const coupun = await prisma.coupon.findUnique({
+const validateCoupon = async (code, user_id) => {
+
+    if (!code || code.trim() === '') {
+        throw new Error('Coupon code is required')
+    }
+
+    const coupon = await prisma.coupon.findUnique({
         where: {
-            code,
+            code
         }
     })
-    if (!coupun) {
-        throw new Error("Coupun invalid");
+    if (!coupon) {
+        throw new Error("Coupon invalid");
     }
 
     const now = new Date()
 
-    if (now > coupun.expires_at) {
-        throw new Error("Coupun expired");
+    if (now > coupon.expires_at) {
+        throw new Error("Coupon expired");
     }
 
-    if (coupun.current_usage >= coupun.max_usage) {
-        throw new Error("Coupun usage limit reachede");
+    if (coupon.current_usage >= coupon.max_usage) {
+        throw new Error("Coupon usage limit reachede");
     }
 
-    return coupun
+    return coupon
     // (Optional) cek kuota penggunaan user
     // const used = await prisma.order.count({
     //     where: { user_id, coupon_code: code }
@@ -127,5 +132,5 @@ module.exports = {
     remove,
     getAll,
     getOne,
-    validateCoupun
+    validateCoupon
 }

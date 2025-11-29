@@ -78,7 +78,12 @@ const getAllProducts = async (filters = {}) => {
             prisma.product.findMany({
                 where,
                 include: {
-                    category: true,
+                    category: {
+                        select: {
+                            name: true,
+                            description: true
+                        }
+                    },
                     images: {
                         where: { is_primary: true },
                         take: 1
@@ -99,7 +104,12 @@ const getAllProducts = async (filters = {}) => {
             prisma.product.findMany({
                 where,
                 include: {
-                    category: true,
+                    category: {
+                        select: {
+                            name: true,
+                            description: true
+                        }
+                    },
                     images: {
                         where: {
                             is_primary: true

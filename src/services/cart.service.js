@@ -6,7 +6,15 @@ const getCart = async (user_id) => {
         include: {
             items: {
                 include: {
-                    product: true,
+                    product: {
+                        select: {
+                            name: true,
+                            description: true,
+                            price:true,
+                            stock: true,
+                            sku: true
+                        }
+                    },
                     variant: true
                 }
             }

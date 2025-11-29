@@ -3,8 +3,8 @@ const { success, error } = require('../utils/response');
 
 const createOrder = async (req, res) => {
     try {
-        const { shipping_address_id } = req.body;
-        const order = await orderService.createOrder(req.user.uuid, shipping_address_id);
+        const { shipping_address_id, coupon_code } = req.body;
+        const order = await orderService.createOrder(req.user.uuid, shipping_address_id, coupon_code);
         return success(res, order, 'Order created successfully', 201);
     } catch (err) {
         return error(res, err.message, 500);

@@ -1,6 +1,6 @@
 const { z } = require("zod")
 
-const createCoupunSchema = z.object({
+const createCouponSchema = z.object({
     code: z.string()
         .min(3, 'Code must be at least 3 characters')
         .max(25, 'Code too long'),
@@ -57,7 +57,7 @@ const createCoupunSchema = z.object({
         }
     });
 
-const updateCoupunSchema = z.object({
+const updateCouponSchema = z.object({
     code: z.string().min(3).max(50).optional(),
     description: z.string().optional(),
     discount_type: z.enum(['percentage', 'fixed']).optional(),
@@ -67,6 +67,6 @@ const updateCoupunSchema = z.object({
 })
 
 module.exports = {
-    createCoupunSchema,
-    updateCoupunSchema
+    createCouponSchema,
+    updateCouponSchema
 }

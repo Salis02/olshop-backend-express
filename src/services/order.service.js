@@ -24,7 +24,7 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
     let discount_total = 0
 
     if (coupon_code) {
-        coupon = await couponService.validateCoupun(coupon_code, user_id)
+        coupon = await couponService.validateCoupon(coupon_code, user_id)
 
         // Minimum order
         if (coupon.min_order && total_price < coupon.min_order) throw new Error(`Minimun order for coupun is ${coupon.min_order}`);
@@ -54,7 +54,7 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
         data: {
             user_id,
             order_code: orderCode,
-            coupon_id: coupon,
+            coupon_id: coupon ? coupon.id : null,
             total_price,
             discount_total,
             shipping_fee,
