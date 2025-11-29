@@ -79,31 +79,6 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
             }
         })
 
-        // const order = await prisma.order.create({
-        //     data: {
-        //         user_id,
-        //         order_code: orderCode,
-        //         coupon_id: coupon ? coupon.id : null,
-        //         total_price,
-        //         discount_total,
-        //         shipping_fee,
-        //         grand_total,
-        //         payment_status: 'pending',
-        //         fulfillment_status: 'unfulfilled',
-        //         shipping_address_id,
-        //         items: {
-        //             create: cart.items.map(item => ({
-        //                 product_id: item.product_id,
-        //                 variant_id: item.variant_id,
-        //                 quantity: item.quantity,
-        //                 price: item.price_snapshot,
-        //                 subtotal: item.price_snapshot * item.quantity
-        //             }))
-        //         }
-        //     },
-        //     include: { items: true }
-        // });
-
         // Increment coupun usage
         if (coupon) {
             await tx.coupon.update({
@@ -118,19 +93,6 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
             })
         }
 
-        // if (coupon) {
-        //     await prisma.coupon.update({
-        //         where: {
-        //             id: coupon.id
-        //         },
-        //         data: {
-        //             current_usage: {
-        //                 increment: 1
-        //             }
-        //         }
-        //     })
-        // }
-
         // Clear cart
         await tx.cartItem.deleteMany({
             where: {
@@ -139,9 +101,6 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
         })
         return order
     })
-    // await prisma.cartItem.deleteMany({
-    //     where: { cart_id: cart.id }
-    // });
 
     return result
 }
