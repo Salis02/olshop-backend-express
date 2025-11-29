@@ -50,36 +50,65 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
     const orderCode = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
     // Create order + order items
-    const order = await prisma.order.create({
-        data: {
-            user_id,
-            order_code: orderCode,
-            coupon_id: coupon ? coupon.id : null,
-            total_price,
-            discount_total,
-            shipping_fee,
-            grand_total,
-            payment_status: 'pending',
-            fulfillment_status: 'unfulfilled',
-            shipping_address_id,
-            items: {
-                create: cart.items.map(item => ({
-                    product_id: item.product_id,
-                    variant_id: item.variant_id,
-                    quantity: item.quantity,
-                    price: item.price_snapshot,
-                    subtotal: item.price_snapshot * item.quantity
-                }))
+    const result = await prisma.$transaction(async (tx) => {
+        // 1. Create order + order items ('tx' menjadi pengganti prisma)        
+        const order = await tx.order.create({
+            data: {
+                user_id,
+                order_code: orderCode,
+                coupon_id: coupon ? coupon.id : null,
+                total_price,
+                discount_total,
+                shipping_fee,
+                grand_total,
+                payment_status: 'pending',
+                fulfillment_status: 'unfulfilled',
+                shipping_address_id,
+                items: {
+                    create: cart.items.map(item => ({
+                        product_id: item.product_id,
+                        variant_id: item.variant_id,
+                        quantity: item.quantity,
+                        price: item.price_snapshot,
+                        subtotal: item.price_snapshot * item.quantity
+                    }))
+                }
+            },
+            include: {
+                items: true
             }
-        },
-        include: { items: true }
-    });
+        })
+    })
+    // const order = await prisma.order.create({
+    //     data: {
+    //         user_id,
+    //         order_code: orderCode,
+    //         coupon_id: coupon ? coupon.id : null,
+    //         total_price,
+    //         discount_total,
+    //         shipping_fee,
+    //         grand_total,
+    //         payment_status: 'pending',
+    //         fulfillment_status: 'unfulfilled',
+    //         shipping_address_id,
+    //         items: {
+    //             create: cart.items.map(item => ({
+    //                 product_id: item.product_id,
+    //                 variant_id: item.variant_id,
+    //                 quantity: item.quantity,
+    //                 price: item.price_snapshot,
+    //                 subtotal: item.price_snapshot * item.quantity
+    //             }))
+    //         }
+    //     },
+    //     include: { items: true }
+    // });
 
     // Increment coupun usage
     if (coupon) {
-        await prisma.coupon.update({
+        await tx.coupon.update({
             where: {
-                id: coupon.id
+                id: coupon_id
             },
             data: {
                 current_usage: {
@@ -89,12 +118,31 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
         })
     }
 
-    // Clear cart
-    await prisma.cartItem.deleteMany({
-        where: { cart_id: cart.id }
-    });
+    // if (coupon) {
+    //     await prisma.coupon.update({
+    //         where: {
+    //             id: coupon.id
+    //         },
+    //         data: {
+    //             current_usage: {
+    //                 increment: 1
+    //             }
+    //         }
+    //     })
+    // }
 
-    return order
+    // Clear cart
+    await tx.cartItem.deleteMany({
+        where: {
+            cart_id: cart.id
+        }
+    })
+
+    // await prisma.cartItem.deleteMany({
+    //     where: { cart_id: cart.id }
+    // });
+
+    return result
 }
 
 const getOrders = async (user_id) => {
