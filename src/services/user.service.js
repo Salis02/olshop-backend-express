@@ -25,6 +25,22 @@ const getProfile = async (uuid) => {
     return user
 }
 
+const getAllUser = async () => {
+    const user = await prisma.user.findMany({
+        include: {
+            role: {
+                select: {
+                    name: true
+                }
+            }
+        }
+    });
+
+    if (!user) throw new Error("Users data not found");
+
+    return user
+}
+
 const updateProfile = async (uuid, data, actor) => {
 
     const { name, phone } = validateRequest(updateProfileSchema, data);
@@ -80,4 +96,9 @@ const updatePassword = async (uuid, data) => {
     return true;
 }
 
-module.exports = { getProfile, updateProfile, updatePassword };
+module.exports = {
+    getProfile,
+    getAllUser,
+    updateProfile,
+    updatePassword,
+};

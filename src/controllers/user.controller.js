@@ -10,6 +10,14 @@ const getUserProfile = async (req, res) => {
     }
 }
 
+const getAllUser = async (req, res) => {
+    try {
+        return success(res, await userService.getAllUser(), 'Users data retrieved successfully', 200)
+    } catch (err) {
+        return error(res, err.message)
+    }
+}
+
 const updateUserProfile = async (req, res) => {
     try {
         const data = await userService.updateProfile(req.user.uuid, req.body, req.user)
@@ -29,4 +37,9 @@ const changeUserPassword = async (req, res) => {
     }
 }
 
-module.exports = { getUserProfile, updateUserProfile, changeUserPassword };
+module.exports = {
+    getUserProfile,
+    getAllUser,
+    updateUserProfile,
+    changeUserPassword
+};
