@@ -94,7 +94,7 @@ const loginUser = async (data, ip) => {
     //Generate JWT Token
     const token = generateToken({
         uuid: user.uuid,
-        role_id: user.role.name
+        role: user.role.name
     });
 
     return {
