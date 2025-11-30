@@ -30,7 +30,7 @@ const updateUserProfile = async (req, res) => {
 const changeUserPassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
-        await userService.updatePassword(req.user.uuid, { oldPassword, newPassword });
+        await userService.updatePassword(req.user.uuid, { oldPassword, newPassword }, req.user);
         return success(res, null, 'Password updated successfully', 201);
     } catch (err) {
         return error(res, err.message, 400);

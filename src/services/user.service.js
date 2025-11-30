@@ -69,7 +69,7 @@ const updateProfile = async (uuid, data, actor) => {
     return updatedUser;
 }
 
-const updatePassword = async (uuid, data) => {
+const updatePassword = async (uuid, data, actor) => {
 
     const { oldPassword, newPassword } = validateRequest(updatePasswordSchema, data);
 
@@ -86,7 +86,7 @@ const updatePassword = async (uuid, data) => {
     });
 
     await log.create({
-        user_id: user.uuid,
+        user_id: actor.uuid,
         action: 'Update Password',
         target_type: 'user',
         target_id: uuid,
