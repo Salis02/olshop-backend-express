@@ -27,7 +27,14 @@ const getProfile = async (uuid) => {
 
 const getAllUser = async () => {
     const user = await prisma.user.findMany({
-        include: {
+        select: {
+            uuid: true,
+            name: true,
+            email: true,
+            password: false,
+            phone: true,
+            created_at: true,
+            updated_at: true,
             role: {
                 select: {
                     name: true
@@ -79,18 +86,23 @@ const updatePassword = async (uuid, data, actor) => {
     const valid = await bcrypt.compare(oldPassword, user.password);
     if (!valid) throw new Error('Old password is incorrect');
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedOldPassword = await user.password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
     await prisma.user.update({
         where: { uuid },
-        data: { password: hashedPassword },
+        data: { password: hashedNewPassword },
     });
 
     await log.create({
         user_id: actor.uuid,
         action: 'Update Password',
-        target_type: 'user',
+        target_type: 'User',
         target_id: uuid,
-        meta: data
+        meta: {
+            oldPassword: hashedOldPassword,
+            newPassword: hashedNewPassword
+        }
     })
 
     return true;
