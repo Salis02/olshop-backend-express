@@ -3,7 +3,9 @@ const bcrypt = require('bcryptjs');
 const { generateToken } = require('../utils/jwt');
 const { rateLimitLogin, resetLoginAttempt, rateLimitRegister } = require('../utils/rateLimiter')
 const { validateRequest } = require('../utils/validate');
-const { registerSchema, loginSchema } = require('../validators/auth.validator')
+const { registerSchema, loginSchema } = require('../validators/auth.validator');
+const { generateResetToken } = require('../utils/generateToken');
+const { sendEmail } = require('../utils/email');
 
 const registerUser = async (data, ip) => {
 
@@ -109,4 +111,78 @@ const loginUser = async (data, ip) => {
     }
 }
 
-module.exports = { registerUser, loginUser };
+const forgotPassword = async (email) => {
+
+    // Search user's email
+    const user = await prisma.user.findUnique({
+        where: { email }
+    })
+
+    if (!user) return true // Don't explain that user is not registered
+
+    const token = generateResetToken()
+    const expiresAt = new Date(Date.now() + process.env.RESET_TOKEN_EXPIRE_MINUTES * 60 * 1000)
+
+    // Save token
+    await prisma.passwordReset.create({
+        data: {
+            email,
+            token,
+            expires_at: expiresAt
+        }
+    })
+
+    const resetUrl = `${process.env.APP_URL}/auth/reset-password?token=${token}`
+
+    await sendEmail(
+        email,
+        `Reset password`,
+        `
+            <h3>Password Reset</h3>
+            <p>Klik link berikut :</p>
+            <a href="${resetUrl}" >${resetUrl}</a>
+            <p>Expired dalam ${process.env.RESET_TOKEN_EXPIRE_MINUTES} menit</p>
+        `
+    )
+
+    return true
+}
+
+const resetPassword = async (token, newPassword) => {
+    const record = await prisma.passwordReset.findUnique({
+        where: {
+            token
+        }
+    })
+
+    if (!record || record.used) throw new Error("Invalid or used token");
+
+    if (new Date() > record.expires_at) throw new Error("Token expired")
+
+    const newHashedPassword = await bcrypt.hash(newPassword, 10)
+
+    await prisma.user.update({
+        where: {
+            email: record.email
+        },
+        data: {
+            password: newHashedPassword
+        }
+    })
+
+    await prisma.passwordReset.update({
+        where: {
+            token
+        },
+        data: {
+            used: true
+        }
+    })
+}
+
+module.exports = {
+    registerUser,
+    loginUser,
+    forgotPassword,
+    resetPassword
+};
