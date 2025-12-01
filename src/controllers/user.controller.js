@@ -37,9 +37,19 @@ const changeUserPassword = async (req, res) => {
     }
 }
 
+const archieveUser = async (req, res) => {
+    try {
+        const user = await userService.archieveUser(req.user.uuid, req.user)
+        return success(res, user, 'User archieved successfully', 200)
+    } catch (err) {
+        return error(res, err.message)
+    }
+}
+
 module.exports = {
     getUserProfile,
     getAllUser,
     updateUserProfile,
-    changeUserPassword
+    changeUserPassword,
+    archieveUser
 };

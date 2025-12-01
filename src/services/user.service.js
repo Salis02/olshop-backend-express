@@ -108,9 +108,41 @@ const updatePassword = async (uuid, data, actor) => {
     return true;
 }
 
+const archieveUser = async (uuid, actor) => {
+
+    if (uuid === actor.uuid) {
+        throw new Error("You can't deactivate your own account");
+    }
+    
+    const user = await prisma.user.findUnique({
+        where: { uuid }
+    })
+
+    if (!user) throw new Error("User not found");
+
+    const archieve = await prisma.user.update({
+        where: { uuid },
+        data: {
+            deleted_at: new Date()
+        }
+    })
+
+    await log.create({
+        user_id: actor.uuid,
+        action: "Archieved user",
+        target_type: "User",
+        meta: {
+            archieve_user_uuid: uuid
+        }
+    })
+
+    return archieve
+}
+
 module.exports = {
     getProfile,
     getAllUser,
     updateProfile,
     updatePassword,
+    archieveUser
 };
