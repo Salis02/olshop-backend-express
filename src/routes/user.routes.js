@@ -9,5 +9,6 @@ router.get('/users', authMiddleware, userController.getAllUser);
 router.put('/profile', authMiddleware, userController.updateUserProfile);
 router.put('/change-password', authMiddleware, userController.changeUserPassword);
 router.put('/:id/archieve', authMiddleware, userController.archieveUser);
+router.put('/:id/restore', authMiddleware, userController.restoreUser);
 
 module.exports = router;

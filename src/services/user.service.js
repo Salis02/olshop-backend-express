@@ -142,10 +142,45 @@ const archieveUser = async (uuid, actor) => {
     return archieve
 }
 
+const restoreUser = async (uuid, actor) => {
+
+    if (uuid === actor.uuid) {
+        throw new Error("You can't restore your own account");
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { uuid }
+    })
+
+    if (!user) throw new Error("User not found");
+
+    if (!user.deleted_at) throw new Error("User is active or not archieved");
+
+    const archieve = await prisma.user.update({
+        where: { uuid },
+        data: {
+            deleted_at: null
+        }
+    })
+
+    await log.create({
+        user_id: actor.uuid,
+        action: "Restore/activated user",
+        target_type: "User",
+        target_id: uuid,
+        meta: {
+            archieve_user_uuid: uuid
+        }
+    })
+
+    return archieve
+}
+
 module.exports = {
     getProfile,
     getAllUser,
     updateProfile,
     updatePassword,
-    archieveUser
+    archieveUser,
+    restoreUser
 };
