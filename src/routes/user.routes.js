@@ -8,6 +8,6 @@ router.get('/profile', authMiddleware, userController.getUserProfile);
 router.get('/users', authMiddleware, userController.getAllUser);
 router.put('/profile', authMiddleware, userController.updateUserProfile);
 router.put('/change-password', authMiddleware, userController.changeUserPassword);
-router.put('/archieve', authMiddleware, userController.archieveUser);
+router.put('/:id/archieve', authMiddleware, userController.archieveUser);
 
 module.exports = router;
