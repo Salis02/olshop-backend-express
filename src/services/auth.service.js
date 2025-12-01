@@ -136,14 +136,21 @@ const forgotPassword = async (email) => {
 
     await sendEmail(
         email,
-        `Reset password`,
-        `
-            <h3>Password Reset</h3>
-            <p>Klik link berikut :</p>
-            <a href="${resetUrl}" >${resetUrl}</a>
-            <p>Expired dalam ${process.env.RESET_TOKEN_EXPIRE_MINUTES} menit</p>
-        `
-    )
+        "Reset password TEST",
+        "<p>Hello this is a reset password test email without URL.</p>"
+    );
+
+
+    // await sendEmail(
+    //     email,
+    //     `Reset password`,
+    //     `
+    //         <h3>Password Reset</h3>
+    //         <p>Klik link berikut :</p>
+    //         <a href="${resetUrl}" >${resetUrl}</a>
+    //         <p>Expired dalam ${process.env.RESET_TOKEN_EXPIRE_MINUTES} menit</p>
+    //     `
+    // )
 
     return true
 }
@@ -178,6 +185,8 @@ const resetPassword = async (token, newPassword) => {
             used: true
         }
     })
+
+    return true
 }
 
 module.exports = {
