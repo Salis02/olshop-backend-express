@@ -34,7 +34,7 @@ const updateAddress = async (id, userId, data, actor) => {
     if (!address || address.user_id !== userId) {
         throw new Error('Address not found or unauthorized');
     }
-    
+
     await log.create({
         user_id: actor.uuid,
         action: `Updated address with id ${id}`,
@@ -52,13 +52,20 @@ const updateAddress = async (id, userId, data, actor) => {
 
 }
 
-const deleteAddress = async (id, userId) => {
+const deleteAddress = async (id, userId, actor) => {
     const address = await prisma.address.findUnique({
         where: { id }
     });
     if (!address || address.user_id !== userId) {
         throw new Error('Address not found or unauthorized');
     }
+
+    await log.create({
+        user_id: actor.uuid,
+        action: `Deleted address with id ${id}`,
+        target_type: "Address",
+        target_id: id,
+    })
 
     return await prisma.address.delete({
         where: { id }
