@@ -22,7 +22,7 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const address = await addressService.updateAddress(Number(id), req.user.uuid, req.body);
+        const address = await addressService.updateAddress(Number(id), req.user.uuid, req.body, req.user);
         return success(res, address, 'Address updated successfully', 200);
     } catch (err) {
         return error(res, err.message, 400);
