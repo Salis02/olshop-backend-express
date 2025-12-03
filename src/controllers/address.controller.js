@@ -12,7 +12,7 @@ const list = async (req, res) => {
 
 const create = async (req, res) => {
     try {
-        const address = await addressService.createAddress(req.user.uuid, req.body);
+        const address = await addressService.createAddress(req.user.uuid, req.user, req.body);
         return success(res, address, 'Address created successfully', 201);
     } catch (err) {
         return error(res, err.message, 400);

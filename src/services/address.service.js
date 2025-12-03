@@ -7,10 +7,23 @@ const getAddressesByUserId = async (userId) => {
     })
 }
 
-const createAddress = async (userId, data) => {
-    return await prisma.address.create({
+const createAddress = async (userId, data, actor) => {
+    const address = await prisma.address.create({
         data: { ...data, user_id: userId },
     })
+
+    await log.create({
+        user_id: actor.uuid,
+        action: `Created new address with id ${address.id}`,
+        target_type: "Address",
+        target_id: address.id,
+        meta:{
+            ...data
+        }
+    })
+
+    return address;
+
 }
 
 const updateAddress = async (id, userId, data) => {
