@@ -12,7 +12,11 @@ const list = async (req, res) => {
 
 const create = async (req, res) => {
     try {
-        const address = await addressService.createAddress(req.user.uuid, req.user, req.body);
+        const address = await addressService.createAddress(
+            req.user.uuid,
+            req.body,
+            req.user
+        );
         return success(res, address, 'Address created successfully', 201);
     } catch (err) {
         return error(res, err.message, 400);
@@ -22,7 +26,12 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const address = await addressService.updateAddress(Number(id), req.user.uuid, req.body, req.user);
+        const address = await addressService.updateAddress(
+            Number(id),
+            req.user.uuid,
+            req.body,
+            req.user
+        );
         return success(res, address, 'Address updated successfully', 200);
     } catch (err) {
         return error(res, err.message, 400);

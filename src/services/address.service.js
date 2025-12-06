@@ -1,4 +1,6 @@
 const prisma = require('../prisma/client');
+const { validateRequest } = require('../utils/validate')
+const { addressCreateSchema, addressUpdateSchema } = require('../validators/address.validator.js');
 
 const getAddressesByUserId = async (userId) => {
     return await prisma.address.findMany({
@@ -8,8 +10,22 @@ const getAddressesByUserId = async (userId) => {
 }
 
 const createAddress = async (userId, data, actor) => {
+
+    const payload = validateRequest(addressCreateSchema, data);
+
+    if (payload.is_default) {
+        // Set all other addresses to not default
+        await prisma.address.updateMany({
+            where: { user_id: userId, is_default: true },
+            data: { is_default: false },
+        })
+    }
+
     const address = await prisma.address.create({
-        data: { ...data, user_id: userId },
+        data: {
+            ...payload,
+            user_id: userId
+        },
     })
 
     await log.create({
@@ -18,7 +34,7 @@ const createAddress = async (userId, data, actor) => {
         target_type: "Address",
         target_id: address.id,
         meta: {
-            ...data
+            payload
         }
     })
 
@@ -35,13 +51,23 @@ const updateAddress = async (id, userId, data, actor) => {
         throw new Error('Address not found or unauthorized');
     }
 
+    const payload = validateRequest(addressUpdateSchema, data);
+
+    if (payload.is_default) {
+        // Set all other addresses to not default
+        await prisma.address.updateMany({
+            where: { user_id: userId },
+            data: { is_default: false },
+        })
+    }
+
     await log.create({
         user_id: actor.uuid,
         action: `Updated address with id ${id}`,
         target_type: "Address",
         target_id: id,
         meta: {
-            ...data
+            payload
         }
     })
 
