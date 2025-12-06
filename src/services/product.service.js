@@ -1,5 +1,7 @@
 const slugify = require('slugify');
 const prisma = require('../prisma/client');
+const { validateRequest } = require('../utils/validate');
+const { createProductSchema, updateProductSchema } = require('../validators/product.validator');
 
 
 const getAllProducts = async (filters = {}) => {
@@ -213,11 +215,12 @@ const getProductSoftDelete = async () => {
 }
 
 const createProduct = async (data, userId) => {
-    const { name, price, stock, description, category_id } = data;
 
     if (!userId) {
         throw new Error('User UUID is required to create a product');
     }
+
+    const { name, price, stock, description, category_id } = validateRequest(createProductSchema, data);
 
     // Generate slug and SKU
     const slug = slugify(name, { lower: true, strict: true });
@@ -243,7 +246,7 @@ const updateProduct = async (uuid, data, userId = null) => {
         throw new Error('Product not found');
     }
 
-    const { name, price, stock, description, category_id } = data
+    const { name, price, stock, description, category_id } = validateRequest(updateProductSchema, data);
 
     const updateProduct = {}
 
