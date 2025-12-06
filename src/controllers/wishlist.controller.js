@@ -3,7 +3,7 @@ const { success, error } = require('../utils/response')
 
 const addWishlist = async (req, res) => {
     try {
-        const wishlist = await wishlistService.add(req.user.uuid, req.body.product_id)
+        const wishlist = await wishlistService.add(req.user.uuid, req.body)
         return success(res, wishlist, 'Wishlist has been added', 201)
     } catch (err) {
         return error(res, err.message)
