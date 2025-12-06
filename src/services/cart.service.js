@@ -1,5 +1,5 @@
 const prisma = require('../prisma/client');
-const { validate } = require('../utils/validate');
+const { validateRequest } = require('../utils/validate');
 const { addCartItemSchema, updateCartItemSchema } = require('../validators/cart.validator');
 
 const getCart = async (user_id) => {
@@ -35,7 +35,7 @@ const getCart = async (user_id) => {
 
 const addItemToCart = async (user_id, data) => {
 
-    const { product_id, variant_id, quantity } = validate(addCartItemSchema, data);
+    const { product_id, variant_id, quantity } = validateRequest(addCartItemSchema, data);
 
     // Make sure product exists
     const product = await prisma.product.findUnique({
@@ -98,9 +98,9 @@ const addItemToCart = async (user_id, data) => {
     }
 }
 
-const updateCartItem = async (user_id, item_id, quantity) => {
+const updateCartItem = async (user_id, item_id, quantityData) => {
 
-    const { quantity } = validate(updateCartItemSchema, quantity);
+    const { quantity } = validateRequest(updateCartItemSchema, quantityData);
 
     // Get cart
     const cart = await prisma.cart.findFirst({

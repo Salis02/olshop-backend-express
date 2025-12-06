@@ -23,8 +23,11 @@ const addItem = async (req, res) => {
 const updateItem = async (req, res) => {
     try {
         const { id } = req.params;
-        const { quantity } = req.body;
-        const item = await cartService.updateCartItem(req.user.uuid, Number(id), quantity);
+        const item = await cartService.updateCartItem(
+            req.user.uuid,
+            Number(id),
+            req.body
+        );
         return success(res, item, 'Cart item updated successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
