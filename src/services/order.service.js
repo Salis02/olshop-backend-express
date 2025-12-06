@@ -2,6 +2,11 @@ const prisma = require('../prisma/client');
 const couponService = require('../services/coupun.service')
 
 const createOrder = async (user_id, shipping_address_id, coupon_code = null) => {
+
+    if (!user_id) {
+        throw new Error('User ID is required to create an order');
+    }
+
     // Get cart
     const cart = await prisma.cart.findFirst({
         where: { user_id },
