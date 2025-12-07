@@ -1,4 +1,6 @@
 const prisma = require('../prisma/client');
+const { validateRequest } = require('../utils/validate');
+const { createCategorySchema, updateCategorySchema } = require('../validators/category.validator');
 
 const getAllCategories = async () => {
     return await prisma.category.findMany({
@@ -9,9 +11,11 @@ const getAllCategories = async () => {
 }
 
 const createCategory = async (data) => {
-    const { name, slug, description } = data;
+
+    const payload = validateRequest(createCategorySchema, data);
+
     const exists = await prisma.category.findFirst({
-        where: { name }
+        where: { name: payload.name }
     });
 
     if (exists) {
@@ -20,9 +24,7 @@ const createCategory = async (data) => {
 
     return await prisma.category.create({
         data: {
-            name,
-            slug,
-            description
+            payload
         }
     });
 }
@@ -36,9 +38,11 @@ const updateCategory = async (id, data) => {
         throw new Error('Category not found');
     }
 
+    const payload = validateRequest(updateCategorySchema, data);
+
     return await prisma.category.update({
         where: { id },
-        data
+        data: payload
     });
 }
 
