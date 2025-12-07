@@ -21,7 +21,7 @@ const updateEvent = async (req, res) => {
 
 const removeEvent = async (req, res) => {
     try {
-        const event = await eventService.remove(Number(req.params.id))
+        const event = await eventService.remove(Number(req.params.id, req.body))
         return success(res, event, 'Event turned-off successfully', 200)
     } catch (err) {
         return error(res, err.message)

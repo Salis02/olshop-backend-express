@@ -11,6 +11,17 @@ const create = async (data) => {
         throw new Error("End date must be greater than start date");
     }
 
+    const date = new Date()
+
+    if (start_date <= date && end_date >= date) {
+        status = 'active'
+    }
+    else if (start_date > date) {
+        status = 'upcoming'
+    } else {
+        status = 'ended'
+    }
+
     // Generate slug
     const slug = slugify(name, {
         lower: true,
@@ -53,6 +64,17 @@ const update = async (id, data) => {
         }
     }
 
+    const date = new Date()
+
+    if (start_date <= date && end_date >= date) {
+        status = 'active'
+    }
+    else if (start_date > date) {
+        status = 'upcoming'
+    } else {
+        status = 'ended'
+    }
+
     if (name) {
         const newSlug = slugify(name, {
             lower: true,
@@ -76,10 +98,14 @@ const update = async (id, data) => {
     }
 
     return await prisma.event.update({
-        where: {
-            id
-        },
-        data
+        where: { id },
+        data: {
+            name,
+            description,
+            start_date,
+            end_date,
+            status
+        }
     })
 }
 
