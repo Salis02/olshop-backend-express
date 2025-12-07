@@ -1,9 +1,15 @@
 const prisma = require('../prisma/client')
 const slugify = require('slugify')
+const { validateRequest } = require('../utils/validate')
+const { createEventSchema, updateEventSchema } = require('../validators/event.validator')
 
 const create = async (data) => {
 
-    const { name, description, start_date, end_date, status } = data
+    const { name, description, start_date, end_date, status } = validateRequest(createEventSchema, data)
+
+    if (new Date(start_date) >= new Date(end_date)) {
+        throw new Error("End date must be greater than start date");
+    }
 
     // Generate slug
     const slug = slugify(name, {
@@ -23,7 +29,7 @@ const create = async (data) => {
 
     return await prisma.event.create({
         data: {
-            name: name,
+            name,
             slug,
             description,
             start_date,
@@ -39,8 +45,16 @@ const update = async (id, data) => {
     })
     if (!exist) throw new Error("Event not found");
 
-    if (data.name) {
-        const newSlug = slugify(data.name, {
+    const { name, description, start_date, end_date, status } = validateRequest(updateEventSchema, data)
+
+    if (start_date && end_date) {
+        if (new Date(start_date) >= new Date(end_date)) {
+            throw new Error("End date must be greater than start date");
+        }
+    }
+
+    if (name) {
+        const newSlug = slugify(name, {
             lower: true,
             strict: true,
             replacement: '-',
