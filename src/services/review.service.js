@@ -1,4 +1,6 @@
 const prisma = require('../prisma/client')
+const { validateRequest } = require('../utils/validate')
+const { createReviewSchema, updateReviewSchema } = require('../validators/review.validator')
 
 /**
  * Shared validation: cek apakah product valid
@@ -36,15 +38,18 @@ const checkUserPurchased = async (user_id, product_id) => {
  * CREATE REVIEW
  */
 const createReview = async (user_id, data) => {
-    const { product_id, rating, comment } = data
+    const payload = validateRequest(createReviewSchema, data)
 
     // Validasi product & pembelian
-    await checkProduct(product_id)
-    await checkUserPurchased(user_id, product_id)
+    await checkProduct(payload.product_id)
+    await checkUserPurchased(user_id, payload.product_id)
 
     // Cek user sudah review belum
     const existing = await prisma.review.findFirst({
-        where: { product_id, user_id }
+        where: {
+            product_id: payload.product_id,
+            user_id
+        }
     })
 
     if (existing) {
@@ -53,10 +58,8 @@ const createReview = async (user_id, data) => {
 
     return await prisma.review.create({
         data: {
-            product_id,
+            ...payload,
             user_id,
-            rating,
-            comment
         }
     })
 }
@@ -65,15 +68,18 @@ const createReview = async (user_id, data) => {
  * UPDATE REVIEW (BEST PRACTICE)
  */
 const updateReview = async (user_id, data) => {
-    const { product_id, rating, comment } = data
+    const payload = validateRequest(updateReviewSchema, data)
 
     // Validasi product & purchase
-    await checkProduct(product_id)
-    await checkUserPurchased(user_id, product_id)
+    await checkProduct(payload.product_id)
+    await checkUserPurchased(user_id, payload.product_id)
 
     // Cek apakah review ada
     const existing = await prisma.review.findFirst({
-        where: { product_id, user_id }
+        where: {
+            product_id: payload.product_id,
+            user_id
+        }
     })
 
     if (!existing) {
