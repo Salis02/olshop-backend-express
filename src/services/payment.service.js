@@ -1,7 +1,9 @@
 const prisma = require('../prisma/client')
+const { validateRequest } = require('../utils/validate')
+const { createPaymentSchema, updatePaymentStatusSchema } = require('../validators/payment.validator')
 
 const createPayment = async (user_id, data) => {
-    const { order_id, provider, reference_no, amount } = data
+    const { order_id, provider, reference_no, amount } = validateRequest(createPaymentSchema, data)
 
     // Check if order exist
     const order = await prisma.order.findUnique({
@@ -72,6 +74,9 @@ const getPaymentDetail = async (user_id, id) => {
 
 // Manual update payment status
 const updatePaymentStatus = async (id, status, paid_at = null) => {
+
+    const { status, paid_at } = validateRequest(updatePaymentStatusSchema, data)
+
     const payment = await prisma.payment.findUnique({
         where: {
             id

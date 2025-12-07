@@ -33,8 +33,7 @@ const getPaymentDetail = async (req, res) => {
 const updateStatus = async (req, res) => {
     try {
         const { id } = req.params
-        const { status, paid_at } = req.body
-        const payment = await paymentService.updatePaymentStatus(Number(id), status, paid_at)
+        const payment = await paymentService.updatePaymentStatus(Number(id), req.body)
         return success(res, payment, 'Payment updated successfully', 201)
     } catch (err) {
         return error(res, err.message)
