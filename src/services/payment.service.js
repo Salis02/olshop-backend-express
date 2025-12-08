@@ -75,7 +75,7 @@ const getPaymentDetail = async (user_id, id) => {
 // Manual update payment status
 const updatePaymentStatus = async (id, status, paid_at = null) => {
 
-    const { status, paid_at } = validateRequest(updatePaymentStatusSchema, data)
+    const payload = validateRequest(updatePaymentStatusSchema, data)
 
     const payment = await prisma.payment.findUnique({
         where: {
@@ -89,7 +89,10 @@ const updatePaymentStatus = async (id, status, paid_at = null) => {
 
     const updated = await prisma.payment.update({
         where: { id },
-        data: { status, paid_at }
+        data: {
+            status: payload.status,
+            paid_at: payload.paid_at || null
+        }
     })
 
     // sync status change dengan order
@@ -98,7 +101,7 @@ const updatePaymentStatus = async (id, status, paid_at = null) => {
             uuid: payment.order_id
         },
         data: {
-            payment_status: status
+            payment_status: payload.status
         }
     })
 
