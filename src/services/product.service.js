@@ -2,7 +2,7 @@ const slugify = require('slugify');
 const prisma = require('../prisma/client');
 const { validateRequest } = require('../utils/validate');
 const { createProductSchema, updateProductSchema } = require('../validators/product.validator');
-
+const { normalizeImage } = require('../utils/helper')
 
 const getAllProducts = async (filters = {}) => {
     let {
@@ -145,6 +145,9 @@ const getAllProducts = async (filters = {}) => {
         }
     })
 
+    const baseUrl = `${process.env.APP_URL || "http://localhost:5000"}`;
+    processed = processed.map(p => normalizeImage(p, baseUrl));
+
     // RATING SORT MODE → manual sort & manual pagination
     if (useRatingSort) {
         // Sort manually
@@ -164,7 +167,7 @@ const getAllProducts = async (filters = {}) => {
                 total,
                 totalPages: Math.ceil(total / limit)
             },
-            date: paginated
+            data: paginated
         }
     }
     // NORMAL MODE → DB handles pagination
@@ -202,7 +205,9 @@ const getProductById = async (uuid) => {
     if (!product) {
         throw new Error('Product not found');
     }
-    return product;
+
+    const baseUrl = `${process.env.APP_URL || "http://localhost:5000"}`;
+    return normalizeImage(product, baseUrl);
 }
 
 const getProductSoftDelete = async () => {

@@ -9,10 +9,12 @@ const createImage = async (product_uuid, path) => {
 
     if (!product) throw new Error("Product not found");
 
+    const normalizedPath = path.replace(/\\/g, '/');
+
     return await prisma.productImage.create({
         data: {
             product_id: product_uuid,
-            path,
+            path: normalizedPath,
             is_primary: false
         }
     })

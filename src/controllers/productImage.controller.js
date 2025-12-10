@@ -4,9 +4,24 @@ const { success, error } = require('../utils/response')
 const uploadProductImage = async (req, res) => {
     try {
         const { uuid } = req.params
-        const filePath = req.file.path
-        const product = await productImageService.createImage(uuid, filePath)
-        return success(res, product, 'Image product uploaded successfully', 201)
+        const path = req.file.path
+        const product = await productImageService.createImage(uuid, path)
+
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+        const filePath = req.file.path.replace(/\\/g, '/');
+
+        const fullUrl = `${baseUrl}/${filePath}`;
+
+        return success(
+            res,
+            {
+                ...product,
+                image_url: fullUrl
+            },
+            'Image product uploaded successfully',
+            201
+        )
     } catch (err) {
         return error(res, err.message)
     }

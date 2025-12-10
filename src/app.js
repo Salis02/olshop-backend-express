@@ -17,8 +17,12 @@ const couponRoutes = require('../src/routes/coupon.routes.js')
 const eventRoutes = require('../src/routes/event.routes.js')
 const eventProductRoutes = require('../src/routes/eventProduct.routes.js')
 const activityRoutes = require('../src/routes/activity.routes.js')
+const path = require('path');
 
 const app = express();
+
+// serve folders uploads
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 if (process.env.NODE_ENV === 'development') {
     app.use(logger);
