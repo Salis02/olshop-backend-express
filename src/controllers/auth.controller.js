@@ -22,12 +22,30 @@ const login = async (req, res) => {
     }
 }
 
+const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body.refreshToken
+        if (!refreshToken) {
+            return error(res, 'Refresh token needed', 400)
+        }
+
+        const token = await authService.refreshTokenService(refreshToken)
+        return success(res, token, 'Token successfully updated')
+    } catch (err) {
+        return error(res, err.message, 401)
+    }
+}
+
 const logout = async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (authHeader) {
             const token = authHeader.split(' ')[1]
             blackListToken(token)
+        }
+
+        if (req.user?.id) {
+            await authService.logoutUser(req.user.uuid)
         }
 
         return success(res, null, 'User logged out successfully', 200);
@@ -58,6 +76,7 @@ const resetPassword = async (req, res) => {
 module.exports = {
     register,
     login,
+    refreshToken,
     logout,
     forgotPassword,
     resetPassword

@@ -162,7 +162,7 @@ const refreshTokenService = async (refreshToken) => {
     }
 }
 
-const logout = async (user_id) => {
+const logoutUser = async (user_id) => {
     const user = await prisma.user.findUnique({
         where: { uuid: user_id }
     })
@@ -256,6 +256,8 @@ const resetPassword = async (token, newPassword) => {
 module.exports = {
     registerUser,
     loginUser,
+    refreshTokenService,
+    logoutUser,
     forgotPassword,
     resetPassword
 };
