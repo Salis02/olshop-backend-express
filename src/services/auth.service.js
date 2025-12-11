@@ -1,6 +1,6 @@
 const prisma = require('../prisma/client');
 const bcrypt = require('bcryptjs');
-const { generateToken } = require('../utils/jwt');
+const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 const { rateLimitLogin, resetLoginAttempt, rateLimitRegister } = require('../utils/rateLimiter')
 const { validateRequest } = require('../utils/validate');
 const { registerSchema, loginSchema } = require('../validators/auth.validator');
@@ -93,14 +93,30 @@ const loginUser = async (data, ip) => {
 
     resetLoginAttempt(ip)
 
-    //Generate JWT Token
-    const token = generateToken({
+    //Generate JWT and Refresh Token
+    const payload = {
         uuid: user.uuid,
+        email: user.email,
         role: user.role.name
-    });
+    }
+
+    const accessToken = generateToken(payload)
+    const refreshToken = generateRefreshToken(payload)
+
+    // const token = generateToken({
+    //     uuid: user.uuid,
+    //     role: user.role.name
+    // });
+
+    // Save new token
+    await prisma.user.update({
+        where: { uuid: user.uuid },
+        data: { remember_token: refreshToken }
+    })
 
     return {
-        token,
+        accessToken,
+        refreshToken,
         user: {
             uuid: user.uuid,
             name: user.name,
@@ -109,6 +125,54 @@ const loginUser = async (data, ip) => {
             role_name: user.role.name
         }
     }
+}
+
+const refreshTokenService = async (refreshToken) => {
+
+    if (!refreshToken) throw new Error("Refresh token rrequired");
+
+    const payload = verifyRefreshToken(refreshToken)
+
+    if (!payload) throw new Error("Invalid or expired refresh token!");
+
+    const user = await prisma.user.findUnique({
+        where: { uuid: payload.uuid }
+    })
+
+    if (!user || user.remember_token !== refreshToken) throw new Error("Refresh token not found");
+
+    const newpayload = {
+        uuid: user.uuid,
+        email: user.email,
+        role: user.role.name
+    }
+
+    const accessToken = generateToken(newpayload)
+    const refreshToken = generateRefreshToken(newpayload)
+
+    // Rotation : change old token with new one
+    await prisma.user.update({
+        where: { uuid: user.uuid },
+        data: { remember_token: refreshToken }
+    })
+
+    return {
+        accessToken: accessToken,
+        refreshToken: refreshToken
+    }
+}
+
+const logout = async (user_id) => {
+    const user = await prisma.user.findUnique({
+        where: { uuid: user_id }
+    })
+
+    if (!user) throw new Error("Who the fuck are you?");
+
+    await prisma.user.update({
+        where: { uuid: user_id },
+        data: { remember_token: null }
+    })
 }
 
 const forgotPassword = async (email) => {
