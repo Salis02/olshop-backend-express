@@ -5,8 +5,13 @@ if (!process.env.JWT_SECRET) {
 }
 
 const JWT_SECRET = process.env.JWT_SECRET
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN
-const JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN
+let JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN
+let JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN
+
+if (process.env.NODE_ENV === 'development') {
+    JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN_DEV || '6h'
+    JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN_DEV || '30d'
+}
 
 const generateToken = (payload) => {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });

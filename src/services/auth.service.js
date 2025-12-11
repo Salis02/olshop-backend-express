@@ -147,18 +147,18 @@ const refreshTokenService = async (refreshToken) => {
         role: user.role.name
     }
 
-    const accessToken = generateToken(newpayload)
-    const refreshToken = generateRefreshToken(newpayload)
+    const newAccessToken = generateToken(newpayload)
+    const newRefreshToken = generateRefreshToken(newpayload)
 
     // Rotation : change old token with new one
     await prisma.user.update({
         where: { uuid: user.uuid },
-        data: { remember_token: refreshToken }
+        data: { remember_token: newRefreshToken }
     })
 
     return {
-        accessToken: accessToken,
-        refreshToken: refreshToken
+        accessToken: newAccessToken,
+        refreshToken: newAccessToken
     }
 }
 

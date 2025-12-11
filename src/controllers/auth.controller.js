@@ -38,13 +38,13 @@ const refreshToken = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (authHeader) {
-            const token = authHeader.split(' ')[1]
-            blackListToken(token)
-        }
+        // const authHeader = req.headers.authorization;
+        // if (authHeader) {
+        //     const token = authHeader.split(' ')[1]
+        //     blackListToken(token)
+        // }
 
-        if (req.user?.id) {
+        if (req.user?.uuid) {
             await authService.logoutUser(req.user.uuid)
         }
 
