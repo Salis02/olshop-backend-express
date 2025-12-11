@@ -4,8 +4,8 @@ const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../
 const { rateLimitLogin, resetLoginAttempt, rateLimitRegister } = require('../utils/rateLimiter')
 const { validateRequest } = require('../utils/validate');
 const { registerSchema, loginSchema } = require('../validators/auth.validator');
-const { generateResetToken } = require('../utils/generateToken');
-const { sendEmail } = require('../utils/email');
+const { generateResetToken } = require('../utils/auth/generateToken');
+const { sendEmail } = require('../utils/auth/email');
 
 const registerUser = async (data, ip) => {
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const logger = require('./utils/logger.js')
+const path = require('path');
 const publicRoutes = require('./routes/public.routes.js');
 const authRoutes = require('./routes/auth.routes.js');
 const userRoutes = require('./routes/user.routes.js');
@@ -11,13 +12,13 @@ const orderRoutes = require('./routes/order.routes.js');
 const cartRoutes = require('./routes/cart.routes.js');
 const paymentRoutes = require('./routes/payment.routes.js')
 const shipmentRoutes = require('./routes/shipment.routes.js')
-const reviewRoutes = require('../src/routes/review.routes.js')
-const wishlistRoutes = require('../src/routes/wishlist.routes.js')
-const couponRoutes = require('../src/routes/coupon.routes.js')
-const eventRoutes = require('../src/routes/event.routes.js')
-const eventProductRoutes = require('../src/routes/eventProduct.routes.js')
-const activityRoutes = require('../src/routes/activity.routes.js')
-const path = require('path');
+const reviewRoutes = require('./routes/review.routes.js')
+const wishlistRoutes = require('./routes/wishlist.routes.js')
+const couponRoutes = require('./routes/coupon.routes.js')
+const eventRoutes = require('./routes/event.routes.js')
+const eventProductRoutes = require('./routes/eventProduct.routes.js')
+const activityRoutes = require('./routes/activity.routes.js')
+const whatsappRoutes = require('./routes/whatsapp.routes.js')
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/coupons', couponRoutes)
 app.use('/api/events', eventRoutes)
 app.use('/api/events-products', eventProductRoutes)
 app.use('/api/activity', activityRoutes)
+app.use('/api/whatsapp', whatsappRoutes)
 
 // app.use('/api/public', publicRoutes);
 

@@ -14,9 +14,9 @@ const authMiddleware = (req, res, next) => {
         return error(res, 'Token missing', 401);
     }
 
-    if(isTokenBlacklisted(token)){
-        return error(res, 'Token has been logged out', 401)
-    }
+    // if(isTokenBlacklisted(token)){
+    //     return error(res, 'Token has been logged out', 401)
+    // }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, {
