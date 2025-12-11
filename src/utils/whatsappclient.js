@@ -5,10 +5,12 @@ let client = null;
 let initialized = false;
 
 const initClient = () => {
+    if (client) return client;
+
     if (!client) {
         client = new Client({
             authStrategy: new LocalAuth({
-                clientId: "whatsapp-session-1",
+                clientId: "my-api-bot",
             }),
             puppeteer: {
                 headless: true,
@@ -30,9 +32,9 @@ const initClient = () => {
         client.on('auth_failure', err => console.log("Auth Failure", err));
         client.on('disconnected', () => console.log("WhatsApp Disconnected"));
 
-        client.initialize();
     }
 
+    client.initialize();
     return client;
 };
 

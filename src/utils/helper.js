@@ -25,7 +25,22 @@ const serializeMessage = (msg) => {
     }
 }
 
+const waitUntilReady = async (client) => {
+    if (client.info && client.info.wid) return true;
+
+    return await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("WhatsApp is not ready")), 15000);
+
+        client.once("ready", () => {
+            clearTimeout(timeout);
+            resolve(true);
+        });
+    });
+};
+
+
 module.exports = {
     normalizeImage,
-    serializeMessage
+    serializeMessage,
+    waitUntilReady
 }

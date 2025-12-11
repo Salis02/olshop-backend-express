@@ -1,13 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const { initClient, getClient, clearClient } = require('../utils/whatsappclient');
-
+const { waitUntilReady } = require('../utils/helper')
 const sendMessage = async (number, message) => {
     let client = getClient();
 
     if (!client) {
         client = initClient();
     }
+
+    await waitUntilReady(client);
 
     const formatted = number.includes("@c.us")
         ? number
