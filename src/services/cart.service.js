@@ -41,7 +41,8 @@ const getCart = async (user_id) => {
         }
     })
 
-    cart.total 
+    cart.total = itemWithCalc.reduce((sum, item) => sum + item.subtotal, 0)
+    cart.items = itemWithCalc
 
     return cart;
 }
@@ -54,31 +55,28 @@ const addItemToCart = async (user_id, data) => {
     const product = await prisma.product.findFirst({
         where: {
             uuid: product_id,
-            deleted_at: null
-        }
+            deleted_at: null,
+            status: 'active'
+        },
+        include: { variants: true }
     });
 
     if (!product) {
-        throw new Error('Product not found');
+        throw new Error('Product not found or not published');
     }
 
     // If variant product exist -> fetch variant and use variant stock
-    let stockToCheck = product.stock
     let variant = null
     if (variant_id) {
-        variant = await prisma.productVariant.findFirst({
-            where: {
-                id: variant_id,
-                product_id: product.uuid
-            }
-        })
+        variant = product.variants.find(v => v.id === variant_id)
 
-        if (!variant) throw new Error("Variant not found");
-        stockToCheck = variant.stock_adjustment
+        if (!variant) throw new Error("Variant not valid");
     }
 
-    if (quantity > stockToCheck) {
-        throw new Error(`Only ${product.stock} items in stock`);
+    const { adjusted } = calculateAdjustedValues(product, variant)
+
+    if (quantity > adjusted.adjustedStock) {
+        throw new Error(`Only ${adjusted.adjustedStock} items in stock`);
     }
 
     // Get or create cart user
@@ -102,26 +100,26 @@ const addItemToCart = async (user_id, data) => {
         // Update quantity
         const newQuantity = existingItem.quantity + quantity;
 
-        if (newQuantity > stockToCheck) {
-            throw new Error(`Only ${product.stock} items in stock`);
+        if (newQuantity > adjusted.adjustedStock) {
+            throw new Error(`Only ${adjusted.adjustedStock} items in stock`);
         }
 
         return await prisma.cartItem.update({
             where: { id: existingItem.id },
             data: { quantity: newQuantity }
         });
-    } else {
-        // snapshot -> product price when adding to cart
-        return await prisma.cartItem.create({
-            data: {
-                cart_id: cart.id,
-                product_id: product.uuid,
-                variant_id: variant_id ? variant_id : null,
-                quantity,
-                price_snapshot: product.price
-            }
-        });
     }
+    // snapshot -> product price when adding to cart (important for imutable)
+    return await prisma.cartItem.create({
+        data: {
+            cart_id: cart.id,
+            product_id: product.uuid,
+            variant_id: variant_id ? variant_id : null,
+            quantity,
+            price_snapshot: adjusted.adjustedPrice
+        }
+    });
+
 }
 
 const updateCartItem = async (user_id, item_id, quantityData) => {
@@ -131,7 +129,12 @@ const updateCartItem = async (user_id, item_id, quantityData) => {
     // Get cart
     const cart = await prisma.cart.findFirst({
         where: { user_id },
+        include: {
+            product: true,
+            variant: true
+        }
     });
+
     if (!cart) {
         throw new Error('Cart not found');
     }
@@ -147,18 +150,20 @@ const updateCartItem = async (user_id, item_id, quantityData) => {
         throw new Error('Cart item not found');
     }
 
-    // Get product to check stock
-    const product = await prisma.product.findUnique({
-        where: { uuid: cartItem.product_id }
-    });
+    // // Get product to check stock
+    // const product = await prisma.product.findUnique({
+    //     where: { uuid: cartItem.product_id }
+    // });
 
-    if (quantity > product.stock) {
-        throw new Error(`Only ${product.stock} items in stock`);
+    const { adjustedStock } = calculateAdjustedValues(cartItem.product, cartItem.variant)
+
+    if (quantity > adjustedStock) {
+        throw new Error(`Only ${adjustedStock} items in stock`);
     }
 
     return await prisma.cartItem.update({
         where: { id: item_id },
-        data: { quantity: Number(quantity) }
+        data: { quantity }
     });
 }
 
