@@ -1,4 +1,6 @@
 const prisma = require('../prisma/client')
+const { validateRequest } = require('../utils/validate')
+const { createProductAttributeSchema, updateProductAttributeSchema } = require('../validators/productAttribute.validator')
 
 const getAll = async (productId) => {
     const attribute = await prisma.productAttribute.findMany({
@@ -13,7 +15,7 @@ const getAll = async (productId) => {
 }
 
 const create = async (productId, data) => {
-    const { key, value } = data
+    const { key, value } = validateRequest(createProductAttributeSchema, data)
 
     const attribute = await prisma.productAttribute.create({
         data: {
@@ -27,6 +29,9 @@ const create = async (productId, data) => {
 }
 
 const update = async (id, data) => {
+
+    const payload = validateRequest(updateProductAttributeSchema, data)
+
     const attribute = await prisma.productAttribute.findUnique({
         where: {
             id
@@ -36,10 +41,11 @@ const update = async (id, data) => {
     if (!attribute) throw new Error("Attribute not found!");
 
     return await prisma.productAttribute.update({
-        where: {
-            id
-        },
-        data
+        where: { id },
+        data: {
+            ...payload,
+            updated_at: new Date()
+        }
     })
 }
 
