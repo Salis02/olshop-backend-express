@@ -1,5 +1,6 @@
-const { da } = require("zod/locales");
 const prisma = require("../prisma/client");
+const { validateRequest } = require('../utils/validate')
+const { createProductVariantSchema, updateProductVariantSchema } = require('../validators/productVariant.validator')
 
 const getAll = async (productId) => {
     const variant = await prisma.productVariant.findMany({
@@ -14,7 +15,7 @@ const getAll = async (productId) => {
 }
 
 const create = async (productId, data) => {
-    const { name, price_adjustment, stock_adjustment } = data
+    const { name, price_adjustment, stock_adjustment } = validateRequest(createProductVariantSchema, data)
 
     const variant = await prisma.productVariant.create({
         data: {
@@ -37,12 +38,15 @@ const update = async (id, data) => {
 
     if (!variant) throw new Error("Variant not found!");
 
+    const payload = validateRequest(updateProductVariantSchema, data)
 
     return await prisma.productVariant.update({
         where: {
             id: Number(id)
         },
-        data
+        data: {
+            ...payload
+        }
     })
 }
 
