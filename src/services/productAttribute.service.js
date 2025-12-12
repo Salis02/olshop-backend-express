@@ -44,7 +44,6 @@ const update = async (id, data) => {
         where: { id },
         data: {
             ...payload,
-            updated_at: new Date()
         }
     })
 }

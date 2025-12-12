@@ -29,11 +29,23 @@ const deleteImage = async (id) => {
 
     if (!img) throw new Error("Image not found");
 
-    return await prisma.productImage.delete({
-        where: {
-            id
+    const deleted = await prisma.productImage.delete({ where: { id } })
+
+    if (img.is_primary) {
+        const nextImage = await prisma.productImage.findFirst({
+            where: { product_id: img.product_id },
+            orderBy: { created_at: 'asc' }
+        })
+
+        if (nextImage) {
+            await prisma.productImage.update({
+                where: { id: nextImage.id },
+                data: { is_primary: true }
+            })
         }
-    })
+    }
+
+    return deleted
 }
 
 const setPrimary = async (id) => {
