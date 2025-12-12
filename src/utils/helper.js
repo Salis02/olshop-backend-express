@@ -1,3 +1,4 @@
+const prisma = require('../prisma/client')
 const upload = require('../middlewares/upload.middleware')
 const multer = require('multer')
 const { error } = require('../utils/response');
@@ -27,6 +28,7 @@ const handleMulter = (req, res, next) => {
     })
 }
 
+// Normalize Image Product
 const normalizeImage = (product, baseUrl) => {
     if (!product.images) return product;
 
@@ -43,6 +45,7 @@ const normalizeImage = (product, baseUrl) => {
     };
 };
 
+// Normalize response from WhatsApp WebJs
 const serializeMessage = (msg) => {
     return {
         message_id: msg.id._serialized,
@@ -54,6 +57,7 @@ const serializeMessage = (msg) => {
     }
 }
 
+// Helper to checking ready of client WhatsApp WebJs
 const waitUntilReady = async (client) => {
     if (client.info && client.info.wid) return true;
 
@@ -67,10 +71,25 @@ const waitUntilReady = async (client) => {
     });
 };
 
+const calculateAdjustedValues = (product, variant) => {
+    const basePrice = product.price
+    const baseStock = product.stock
+
+    const priceAdjustment = variant?.price_adjustment || 0
+    const stockAdjustment = variant?.stock_adjustment || 0
+
+    return {
+        adjustedPrice: basePrice + priceAdjustment,
+        adjustedStock: baseStock + stockAdjustment,
+        variant // return variant to reuse again
+    }
+}
+
 
 module.exports = {
     normalizeImage,
     serializeMessage,
     waitUntilReady,
-    handleMulter
+    handleMulter,
+    calculateAdjustedValues
 }

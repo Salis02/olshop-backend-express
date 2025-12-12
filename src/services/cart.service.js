@@ -1,6 +1,7 @@
 const prisma = require('../prisma/client');
 const { validateRequest } = require('../utils/validate');
 const { addCartItemSchema, updateCartItemSchema } = require('../validators/cart.validator');
+const { calculateAdjustedValues } = require('../utils/helper')
 
 const getCart = async (user_id) => {
     let cart = await prisma.cart.findFirst({
@@ -30,6 +31,18 @@ const getCart = async (user_id) => {
         });
     }
 
+    // Recalculate total every time getCart (important for frontend)
+    const itemWithCalc = cart.items.map(item => {
+        const { adjustedPrice } = calculateAdjustedValues(item.product, item.variant)
+        return {
+            ...item,
+            current_price: adjustedPrice, // realtime price not snapshoot
+            subtotal: adjustedPrice * item.quantity
+        }
+    })
+
+    cart.total 
+
     return cart;
 }
 
@@ -38,35 +51,50 @@ const addItemToCart = async (user_id, data) => {
     const { product_id, variant_id, quantity } = validateRequest(addCartItemSchema, data);
 
     // Make sure product exists
-    const product = await prisma.product.findUnique({
-        where: { uuid: product_id }
+    const product = await prisma.product.findFirst({
+        where: {
+            uuid: product_id,
+            deleted_at: null
+        }
     });
 
     if (!product) {
         throw new Error('Product not found');
     }
 
-    if (quantity > product.stock) {
+    // If variant product exist -> fetch variant and use variant stock
+    let stockToCheck = product.stock
+    let variant = null
+    if (variant_id) {
+        variant = await prisma.productVariant.findFirst({
+            where: {
+                id: variant_id,
+                product_id: product.uuid
+            }
+        })
+
+        if (!variant) throw new Error("Variant not found");
+        stockToCheck = variant.stock_adjustment
+    }
+
+    if (quantity > stockToCheck) {
         throw new Error(`Only ${product.stock} items in stock`);
     }
 
     // Get or create cart user
-    let cart = await prisma.cart.findFirst({
-        where: { user_id },
-    });
-
+    let cart = await prisma.cart.findFirst({ where: { user_id } });
     if (!cart) {
         cart = await prisma.cart.create({
             data: { user_id }
         });
     }
 
-    // Checck if item already in cart
+    // Check if item already in cart
     const existingItem = await prisma.cartItem.findFirst({
         where: {
             cart_id: cart.id,
             product_id: product.uuid,
-            variant_id: variant_id ? variant_id : null
+            variant_id: variant_id ?? null
         }
     });
 
@@ -74,15 +102,13 @@ const addItemToCart = async (user_id, data) => {
         // Update quantity
         const newQuantity = existingItem.quantity + quantity;
 
-        if (newQuantity > product.stock) {
+        if (newQuantity > stockToCheck) {
             throw new Error(`Only ${product.stock} items in stock`);
         }
 
         return await prisma.cartItem.update({
             where: { id: existingItem.id },
-            data: {
-                quantity: newQuantity
-            }
+            data: { quantity: newQuantity }
         });
     } else {
         // snapshot -> product price when adding to cart
