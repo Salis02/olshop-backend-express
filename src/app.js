@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const logger = require('./utils/logger.js')
+const logger = require('./utils/security/logger.js')
 const path = require('path');
 const publicRoutes = require('./routes/public.routes.js');
 const authRoutes = require('./routes/auth.routes.js');

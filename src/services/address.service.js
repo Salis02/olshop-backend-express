@@ -1,6 +1,7 @@
 const prisma = require('../prisma/client');
 const { validateRequest } = require('../utils/validate')
 const { addressCreateSchema, addressUpdateSchema } = require('../validators/address.validator.js');
+const log = require('../services/activity.service.js')
 
 const getAddressesByUserId = async (userId) => {
     return await prisma.address.findMany({
@@ -32,9 +33,9 @@ const createAddress = async (userId, data, actor) => {
         user_id: actor.uuid,
         action: `Created new address with id ${address.id}`,
         target_type: "Address",
-        target_id: address.id,
+        target_id: userId,
         meta: {
-            payload
+            ...payload
         }
     })
 
