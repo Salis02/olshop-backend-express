@@ -22,5 +22,8 @@ const createProductVariantSchema = z.object({
 })
 
 const updateProductVariantSchema = createProductVariantSchema.partial()
+    .refine(data => Object.keys(data).length > 0, {
+        message: 'At least one field must be provided to update'
+    })
 
 module.exports = { createProductVariantSchema, updateProductVariantSchema }
