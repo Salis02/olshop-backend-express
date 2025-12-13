@@ -71,6 +71,7 @@ const waitUntilReady = async (client) => {
     });
 };
 
+// Helper to calculate adjustment price/stock product variant
 const calculateAdjustedValues = (product, variant) => {
     const basePrice = product.price
     const baseStock = product.stock
@@ -85,11 +86,35 @@ const calculateAdjustedValues = (product, variant) => {
     }
 }
 
+const adjustStock = async (orderId, action = 'decrement') => {
+    const order = await prisma.order.findUnique({
+        where: { uuid: orderId },
+        include: {
+            items: {
+                include: { product: true, variant: true }
+            }
+        }
+    })
+
+    for (const item of order.items){
+        const multiplier = action === 'decrement' ? -1 : 1 // increment if rollback
+        await prisma.product.update({
+            where:{uuid: item.product_id},
+            data:{
+                stock:{
+                    [action === 'decrement'? 'decrement' : 'increment']: item.quantity* multiplier
+                }
+            }
+        })
+    }
+}
+
 
 module.exports = {
     normalizeImage,
     serializeMessage,
     waitUntilReady,
     handleMulter,
-    calculateAdjustedValues
+    calculateAdjustedValues,
+    adjustStock
 }

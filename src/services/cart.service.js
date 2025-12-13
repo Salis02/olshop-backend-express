@@ -150,11 +150,6 @@ const updateCartItem = async (user_id, item_id, quantityData) => {
         throw new Error('Cart item not found');
     }
 
-    // // Get product to check stock
-    // const product = await prisma.product.findUnique({
-    //     where: { uuid: cartItem.product_id }
-    // });
-
     const { adjustedStock } = calculateAdjustedValues(cartItem.product, cartItem.variant)
 
     if (quantity > adjustedStock) {

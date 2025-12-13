@@ -7,24 +7,42 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
         throw new Error('User ID is required to create an order');
     }
 
-    // Get cart
+    // 1. Get completely cart include product and variant
     const cart = await prisma.cart.findFirst({
         where: { user_id },
         include: {
-            items: true
+            items: {
+                include: {
+                    product: {
+                        select: {
+                            uuid: true,
+                            price: true,
+                            stock: true
+                        }
+                    },
+                    variant: {
+                        select: {
+                            id: true,
+                            price_adjustment: true,
+                            stock_adjustment: true
+                        }
+                    }
+                }
+            }
         }
     });
+
     if (!cart || cart.items.length === 0) {
         throw new Error('Cart is empty or does not exist');
     }
 
-    // Sum total price
+    // 2. Sum total price from price_snapshot
     const total_price = cart.items.reduce(
         (sum, item) => sum + item.price_snapshot * item.quantity,
         0
     );
 
-    // Coupun application
+    // 3. Coupun application
     let coupon = null
     let discount_total = 0
 
@@ -46,17 +64,15 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
             discount_total = total_price
         }
     }
-
-    // Final total
     const shipping_fee = 0;
     const grand_total = total_price - discount_total + shipping_fee
 
-    // Create order code
+    // 4. Create order code
     const orderCode = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
-    // Create order + order items
+    // 5. Create order + order items in one transaction
     const result = await prisma.$transaction(async (tx) => {
-        // 1. Create order + order items ('tx' menjadi pengganti prisma)        
+        // A. Create order + order items ('tx' menjadi pengganti prisma)        
         const order = await tx.order.create({
             data: {
                 user_id,
@@ -84,7 +100,22 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
             }
         })
 
-        // Increment coupun usage
+        // B. Reduce product stok and variant (IMPORTANT)
+        for (const item of cart.items) {
+            const stockAdjustment = item.variant?.stock_adjustment || 0
+
+            // Reduce mainStock = product.stock + variant.stock_adjustment,
+            await tx.product.update({
+                where: { uuid: item.product_id },
+                data: {
+                    stock: {
+                        decrement: item.quantity
+                    }
+                }
+            })
+        }
+
+        // C. Increment coupun usage
         if (coupon) {
             await tx.coupon.update({
                 where: {
@@ -98,7 +129,7 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
             })
         }
 
-        // Clear cart
+        // D. Clear cart
         await tx.cartItem.deleteMany({
             where: {
                 cart_id: cart.id
@@ -124,11 +155,8 @@ const getOrders = async (user_id) => {
                 select: {
                     quantity: true,
                     price: true,
-                    product: {
-                        select: {
-                            name: true,
-                        }
-                    }
+                    product: { select: { name: true } },
+                    variant: { select: { name: true } }
                 }
             },
         },
