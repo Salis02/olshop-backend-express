@@ -1,7 +1,6 @@
 const prisma = require('../prisma/client')
 const { validateRequest } = require('../utils/validate')
 const { createPaymentSchema, updatePaymentStatusSchema } = require('../validators/payment.validator')
-const { adjustStock } = require('../utils/helper')
 
 const createPayment = async (user_id, data) => {
     const { order_id, provider, reference_no, amount } = validateRequest(createPaymentSchema, data)
