@@ -96,18 +96,62 @@ const adjustStock = async (orderId, action = 'decrement') => {
         }
     })
 
-    for (const item of order.items){
+    for (const item of order.items) {
         const multiplier = action === 'decrement' ? -1 : 1 // increment if rollback
         await prisma.product.update({
-            where:{uuid: item.product_id},
-            data:{
-                stock:{
-                    [action === 'decrement'? 'decrement' : 'increment']: item.quantity* multiplier
+            where: { uuid: item.product_id },
+            data: {
+                stock: {
+                    [action === 'decrement' ? 'decrement' : 'increment']: item.quantity * multiplier
                 }
             }
         })
     }
 }
+
+// WEBHOOK / CALLBACK DARI MIDTRANS, XENDIT, DLL
+const handlePaymentWebhook = async (payload) => {
+    const { order_id, status, fraud_status } = validateRequest(webhookPaymentSchema, payload);
+
+    const order = await prisma.order.findUnique({ where: { uuid: order_id } });
+    if (!order) throw new Error('Order not found');
+
+    const finalStatus =
+        status === 'capture' || status === 'settlement'
+            ? 'paid'
+            : status === 'expire' || status === 'cancel' || status === 'deny'
+                ? 'failed'
+                : 'pending';
+
+    await prisma.$transaction(async (tx) => {
+        // Update payment
+        await tx.payment.updateMany({
+            where: { order_id },
+            data: { status: finalStatus, paid_at: finalStatus === 'paid' ? new Date() : null }
+        });
+
+        // Update order
+        await tx.order.update({
+            where: { uuid: order_id },
+            data: {
+                payment_status: finalStatus,
+                fulfillment_status: finalStatus === 'paid' ? 'processing' : 'unfulfilled'
+            }
+        });
+
+        // KRUSIAL: Kurangi stok hanya saat benar-benar dibayar
+        if (finalStatus === 'paid') {
+            await adjustStock(order_id, 'decrement');
+        }
+
+        // Kalau expired/gagal → kembalikan stok
+        if (finalStatus === 'failed' && order.payment_status === 'pending') {
+            await adjustStock(order_id, 'increment');
+        }
+    });
+
+    return success;
+};
 
 
 module.exports = {
@@ -116,5 +160,5 @@ module.exports = {
     waitUntilReady,
     handleMulter,
     calculateAdjustedValues,
-    adjustStock
+    handlePaymentWebhook
 }
