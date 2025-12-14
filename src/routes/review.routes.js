@@ -5,6 +5,6 @@ const reviewController = require('../controllers/review.controller')
 
 router.post('/', authMiddleware, reviewController.createReview)
 router.patch('/', authMiddleware, reviewController.updateReview)
-router.get('/:product_id', authMiddleware, reviewController.getReview)
+router.get('/:product_id', reviewController.getReview)
 
 module.exports = router
