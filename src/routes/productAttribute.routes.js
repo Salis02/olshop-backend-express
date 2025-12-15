@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router({ mergeParams: true })
 const authMiddleware = require('../middlewares/auth.middleware')
 const productAtrributeController = require('../controllers/productAttribute.controller')
+const allowRoles = require('../middlewares/role.middleware')
 
 router.use(
     authMiddleware,

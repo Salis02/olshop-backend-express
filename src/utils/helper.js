@@ -86,6 +86,22 @@ const calculateAdjustedValues = (product, variant) => {
     }
 }
 
+// Helper to check ownership product
+const assertProductOwnership = async ({ product_id, user }) => {
+    const product = await prisma.product.findUnique({
+        where: { uuid: product_id },
+        select: { created_by: true }
+    })
+
+    if (!product) throw new Error("Product not found");
+
+    if (user.role === 'ADMIN') return
+
+    if (product.created_by !== user.uuid) throw new Error("Forbidden: You don't own this product");
+
+}
+
+// Helper to adjust stock after status payment order
 const adjustStock = async (orderId, action = 'decrement') => {
     const order = await prisma.order.findUnique({
         where: { uuid: orderId },
@@ -160,5 +176,6 @@ module.exports = {
     waitUntilReady,
     handleMulter,
     calculateAdjustedValues,
-    handlePaymentWebhook
+    handlePaymentWebhook,
+    assertProductOwnership
 }
