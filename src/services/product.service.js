@@ -251,6 +251,12 @@ const updateProduct = async (uuid, data, userId = null) => {
         throw new Error('Product not found');
     }
 
+    if (user.role === 'SELLER') {
+        if (product.created_by !== userId) {
+            throw new Error("You don't own this product!");
+        }
+    }
+
     const { name, price, stock, description, category_id } = validateRequest(updateProductSchema, data);
 
     const updateProduct = {}
