@@ -245,39 +245,49 @@ const createProduct = async (data, userId) => {
     });
 }
 
-const updateProduct = async (uuid, data, userId = null) => {
+const updateProduct = async (uuid, data, user) => {
     const product = await prisma.product.findUnique({ where: { uuid } });
-    if (!product) {
-        throw new Error('Product not found');
+    if (!product) throw new Error('Product not found');
+
+    if (user.role_name === 'SELLER' && product.created_by !== user.uuid) {
+        throw new Error("You don't own this product!");
     }
 
-    if (user.role === 'SELLER') {
-        if (product.created_by !== userId) {
-            throw new Error("You don't own this product!");
-        }
-    }
+    const {
+        name,
+        price,
+        stock,
+        description,
+        category_id
+    } = validateRequest(updateProductSchema, data);
 
-    const { name, price, stock, description, category_id } = validateRequest(updateProductSchema, data);
-
-    const updateProduct = {}
+    const updateData = {};
 
     if (name) {
-        updateProduct.name = name
-        updateProduct.slug = slugify(name, { lower: true, strict: true })
+        updateData.name = name;
+        updateData.slug = slugify(name, { lower: true, strict: true });
     }
 
-    if (price !== undefined) updateProduct.price = Number(price)
-    if (stock !== undefined) updateProduct.stock = Number(stock)
-    if (description !== undefined) updateProduct.description = description
-    if (category_id !== undefined) updateProduct.category_id = category_id
+    if (price !== undefined) updateData.price = Number(price);
+    if (stock !== undefined) updateData.stock = Number(stock);
+    if (description !== undefined) updateData.description = description;
 
-    if (userId) updateProduct.update_by = userId
+    if (category_id !== undefined) {
+        updateData.category = {
+            connect: { id: category_id }
+        };
+    }
+    
+    updateData.updater = {
+        connect: { uuid: user.uuid }
+    };
 
-    return await prisma.product.update({
+    return prisma.product.update({
         where: { uuid },
-        data: updateProduct
+        data: updateData
     });
-}
+};
+
 
 const softDelete = async (uuid, userId = null) => {
     const product = await prisma.product.findUnique({ where: { uuid } });

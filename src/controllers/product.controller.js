@@ -57,7 +57,11 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const product = await productService.updateProduct(req.params.uuid, req.body);
+        const product = await productService.updateProduct(
+            req.params.uuid,
+            req.body,
+            req.user
+        );
         return success(res, product, 'Product updated successfully', 201);
     } catch (err) {
         return error(res, err.message, 500);
