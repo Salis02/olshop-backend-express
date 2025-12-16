@@ -25,7 +25,7 @@ const registerUser = async (data, ip) => {
 
     //Jika ada, throw error
     if (existUser) {
-        throw new Error('User already exists');
+        throw new Error('User or email already exists');
     }
 
     //Cek Role 'USER' dari tabel Role, default role untuk user baru
@@ -102,11 +102,6 @@ const loginUser = async (data, ip) => {
 
     const accessToken = generateToken(payload)
     const refreshToken = generateRefreshToken(payload)
-
-    // const token = generateToken({
-    //     uuid: user.uuid,
-    //     role: user.role.name
-    // });
 
     // Save new token
     await prisma.user.update({
