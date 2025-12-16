@@ -22,7 +22,8 @@ const handleMulter = (req, res, next) => {
             }
             return error(res, message, statusCode)
         }
-
+        
+        if (!req.file) return error(res, 'Product image is required', 400)
         // Contine to middleware/controller if not error
         next()
     })
