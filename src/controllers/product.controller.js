@@ -48,7 +48,10 @@ const showSoftDelete = async (req, res) => {
 
 const create = async (req, res) => {
     try {
-        const product = await productService.createProduct(req.body, req.user.uuid);
+        const product = await productService.createProduct(
+            req.body, 
+            req.user
+        );
         return success(res, product, 'Product created successfully', 201);
     } catch (err) {
         return error(res, err.message, 500);

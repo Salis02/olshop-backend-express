@@ -90,7 +90,7 @@ const deleteAddress = async (id, userId, actor) => {
     await log.create({
         user_id: actor.uuid,
         action: `Deleted address with id ${id}`,
-        target_type: "Address",
+        target_type: userId,
         target_id: id,
     })
 

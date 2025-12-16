@@ -2,6 +2,7 @@ const slugify = require('slugify');
 const prisma = require('../prisma/client');
 const { validateRequest } = require('../utils/validate');
 const { createProductSchema, updateProductSchema } = require('../validators/product.validator');
+const log = require('../services/activity.service')
 const { normalizeImage } = require('../utils/helper')
 
 const getAllProducts = async (filters = {}) => {
@@ -219,19 +220,34 @@ const getProductSoftDelete = async () => {
     return product
 }
 
-const createProduct = async (data, userId) => {
+const createProduct = async (data, user) => {
 
-    if (!userId) {
+    if (!user) {
         throw new Error('User UUID is required to create a product');
     }
 
-    const { name, price, stock, description, category_id } = validateRequest(createProductSchema, data);
+    if (user.role !== 'SELLER' && user.role !== 'ADMIN') {
+        throw new Error("You are not allowed to create product");
+    }
+
+    const {
+        name,
+        price,
+        stock,
+        description,
+        category_id
+    } = validateRequest(createProductSchema, data);
 
     // Generate slug and SKU
     const slug = slugify(name, { lower: true, strict: true });
+
+    const existingSlug = await prisma.product.findUnique({ where: { slug: slug } })
+
+    if (existingSlug) throw new Error("Slug already exist");
+
     const sku = `SKU-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    return await prisma.product.create({
+    const product = await prisma.product.create({
         data: {
             name,
             slug,
@@ -239,10 +255,30 @@ const createProduct = async (data, userId) => {
             stock: Number(stock),
             description,
             sku,
-            category_id: Number(category_id),
-            created_by: userId
+            category: {
+                connect: { id: Number(category_id) }
+            },
+            creator: {
+                connect: { uuid: user.uuid }
+            }
         }
     });
+
+    await log.create({
+        user_id: user.uuid,
+        action: 'Create product',
+        target_type: `Products with id ${product.uuid}`,
+        target_id: product.uuid,
+        meta: {
+            name: name,
+            price: price,
+            stock: stock,
+            description: description
+        }
+
+    })
+
+    return product
 }
 
 const updateProduct = async (uuid, data, user) => {
@@ -277,10 +313,20 @@ const updateProduct = async (uuid, data, user) => {
             connect: { id: category_id }
         };
     }
-    
+
     updateData.updater = {
         connect: { uuid: user.uuid }
     };
+
+    await log.create({
+        user_id: user.uuid,
+        action: `Update product with id ${product.uuid}`,
+        target_type: 'Products',
+        target_id: product.uuid,
+        meta: {
+            ...updateData
+        }
+    })
 
     return prisma.product.update({
         where: { uuid },
