@@ -66,9 +66,9 @@ const updateAddress = async (id, userId, data, actor) => {
         user_id: actor.uuid,
         action: `Updated address with id ${id}`,
         target_type: "Address",
-        target_id: id,
+        target_id: userId,
         meta: {
-            payload
+            ...payload
         }
     })
 
