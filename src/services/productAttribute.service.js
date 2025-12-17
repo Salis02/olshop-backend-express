@@ -42,7 +42,7 @@ const create = async (productId, data, actor) => {
     return attribute
 }
 
-const update = async (id, data) => {
+const update = async (id, data, actor) => {
 
     const payload = validateRequest(updateProductAttributeSchema, data)
 
@@ -54,12 +54,24 @@ const update = async (id, data) => {
 
     if (!attribute) throw new Error("Attribute not found!");
 
-    return await prisma.productAttribute.update({
+    const update = await prisma.productAttribute.update({
         where: { id },
         data: {
             ...payload,
         }
     })
+
+    await log.create({
+        user_id: actor.uuid,
+        action: `Update Product attribute product with uuid ${id} `,
+        target_type: 'Product Attribute',
+        target_id: id.toString(),
+        meta: {
+            ...payload
+        }
+    })
+
+    return update
 }
 
 const remove = async (id) => {

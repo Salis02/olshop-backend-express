@@ -23,7 +23,7 @@ const createAttribute = async (req, res) => {
 
 const updateAttribute = async (req, res) => {
     try {
-        const attribute = await productAtrributeService.update(Number(req.params.id), req.body)
+        const attribute = await productAtrributeService.update(Number(req.params.id), req.body, req.user)
         return success(res, attribute, 'Attribute product updated successfully', 201)
     } catch (err) {
         return error(res, err.message)
