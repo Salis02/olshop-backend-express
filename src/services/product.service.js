@@ -335,18 +335,30 @@ const updateProduct = async (uuid, data, user) => {
 };
 
 
-const softDelete = async (uuid, userId = null) => {
+const softDelete = async (uuid, actor) => {
     const product = await prisma.product.findUnique({ where: { uuid } });
     if (!product) {
         throw new Error('Product not found');
     }
-    return await prisma.product.update({
+    const softDelete = await prisma.product.update({
         where: { uuid },
         data: {
             deleted_at: new Date(),
-            updated_by: userId || product.updated_by
+            updated_by: actor?.uuid ?? product.updated_by
         }
     });
+
+    await log.create({
+        user_id: actor.uuid,
+        action: `Archive product with uuid ${product.uuid}`,
+        target_type: 'Products',
+        target_id: product.uuid,
+        meta: {
+            product: softDelete.deleted_at || new Date()
+        }
+    })
+
+    return softDelete
 }
 
 const restoreProduct = async (uuid) => {

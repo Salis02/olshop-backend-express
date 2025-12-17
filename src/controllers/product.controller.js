@@ -73,7 +73,10 @@ const update = async (req, res) => {
 
 const softDelete = async (req, res) => {
     try {
-        await productService.softDelete(req.params.uuid);
+        await productService.softDelete(
+            req.params.uuid,
+            req.user
+        );
         return success(res, productService, 'Product turn-off successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
