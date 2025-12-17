@@ -32,7 +32,7 @@ const updateAttribute = async (req, res) => {
 
 const removeAttribute = async (req, res) => {
     try {
-        await productAtrributeService.remove(Number(req.params.id))
+        await productAtrributeService.remove(Number(req.params.id), req.user)
         return success(res, null, 'Attribute product removed successfully', 200)
     } catch (err) {
         return error(res, err.message)

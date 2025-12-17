@@ -74,7 +74,7 @@ const update = async (id, data, actor) => {
     return update
 }
 
-const remove = async (id) => {
+const remove = async (id, actor) => {
     const attribute = await prisma.productAttribute.findUnique({
         where: {
             id
@@ -83,11 +83,27 @@ const remove = async (id) => {
 
     if (!attribute) throw new Error("Attribute not found!");
 
-    return await prisma.productAttribute.delete({
+    const remove = await prisma.productAttribute.delete({
         where: {
             id
         }
     })
+
+    await log.create({
+        user_id: actor.uuid,
+        action: `Remove Product attribute product with uuid ${id} `,
+        target_type: 'Product Attribute',
+        target_id: id.toString(),
+        meta: JSON.stringify({
+            deleted: {
+                id: attribute.id,
+                value: attribute.value,
+                type: attribute.type
+            }
+        })
+    })
+
+    return remove
 }
 
 module.exports = {
