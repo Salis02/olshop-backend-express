@@ -354,14 +354,22 @@ const softDelete = async (uuid, actor) => {
         target_type: 'Products',
         target_id: product.uuid,
         meta: {
-            product: softDelete.deleted_at || new Date()
+            changes: {
+                deleted_at: {
+                    before: null,
+                    after: softDelete.deleted_at
+                }
+            },
+            product: {
+                name: product.name
+            }
         }
     })
 
     return softDelete
 }
 
-const restoreProduct = async (uuid) => {
+const restoreProduct = async (uuid, actor) => {
     const product = await prisma.product.findUnique({
         where: {
             uuid
@@ -372,7 +380,7 @@ const restoreProduct = async (uuid) => {
 
     if (product.deleted_at === null) throw new Error("Product is not deleted");
 
-    return await prisma.product.update({
+    const restoreProduct = await prisma.product.update({
         where: {
             uuid
         },
@@ -380,6 +388,28 @@ const restoreProduct = async (uuid) => {
             deleted_at: null
         }
     })
+
+    await log.create({
+        user_id: actor.uuid,
+        action: `Activated product with uuid ${product.uuid}`,
+        target_type: 'Products',
+        target_id: product.uuid,
+        meta: {
+            changes: {
+                deleted_at: {
+                    before: product.deleted_at,
+                    after: null
+                }
+            },
+            product: {
+                uuid: product.uuid,
+                name: product.name
+            }
+        }
+
+    })
+
+    return restoreProduct
 }
 
 const forceDelete = async (uuid) => {

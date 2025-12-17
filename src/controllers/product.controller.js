@@ -85,7 +85,10 @@ const softDelete = async (req, res) => {
 
 const restore = async (req, res) => {
     try {
-        const product = await productService.restoreProduct(req.params.uuid)
+        const product = await productService.restoreProduct(
+            req.params.uuid,
+            req.user
+        )
         return success(res, product, 'Product restored successfully', 200)
     } catch (err) {
         return error(res, err.message)
