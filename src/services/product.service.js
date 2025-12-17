@@ -402,7 +402,6 @@ const restoreProduct = async (uuid, actor) => {
                 }
             },
             product: {
-                uuid: product.uuid,
                 name: product.name
             }
         }

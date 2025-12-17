@@ -1,6 +1,7 @@
 const prisma = require('../prisma/client')
 const { validateRequest } = require('../utils/validate')
 const { createProductAttributeSchema, updateProductAttributeSchema } = require('../validators/productAttribute.validator')
+const log = require('../services/activity.service')
 
 const getAll = async (productId) => {
     const attribute = await prisma.productAttribute.findMany({
@@ -14,7 +15,7 @@ const getAll = async (productId) => {
     return attribute
 }
 
-const create = async (productId, data) => {
+const create = async (productId, data, actor) => {
     const { key, value } = validateRequest(createProductAttributeSchema, data)
 
     const attribute = await prisma.productAttribute.create({
@@ -22,6 +23,19 @@ const create = async (productId, data) => {
             product_id: productId,
             key: key,
             value: value
+        }
+    })
+
+    await log.create({
+        user_id: actor.uuid,
+        action: `Create Product attribute product with uuid ${productId} `,
+        target_type: 'Product Attribute',
+        target_id: productId,
+        meta: {
+            attribute: {
+                key,
+                value
+            }
         }
     })
 

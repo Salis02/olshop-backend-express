@@ -14,7 +14,7 @@ const getAllAttribute = async (req, res) => {
 const createAttribute = async (req, res) => {
     try {
         const { uuid } = req.params
-        const attribute = await productAtrributeService.create(uuid, req.body)
+        const attribute = await productAtrributeService.create(uuid, req.body, req.user)
         return success(res, attribute, 'Attribute product created successfully', 201)
     } catch (err) {
         return error(res, err.message)
