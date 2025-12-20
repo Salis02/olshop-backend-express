@@ -73,10 +73,10 @@ const addItemToCart = async (user_id, data) => {
         if (!variant) throw new Error("Variant not valid");
     }
 
-    const { adjusted } = calculateAdjustedValues(product, variant)
+    const { adjustedPrice, adjustedStock } = calculateAdjustedValues(product, variant)
 
-    if (quantity > adjusted.adjustedStock) {
-        throw new Error(`Only ${adjusted.adjustedStock} items in stock`);
+    if (quantity > adjustedStock) {
+        throw new Error(`Only ${adjustedStock} items in stock`);
     }
 
     // Get or create cart user
@@ -100,8 +100,8 @@ const addItemToCart = async (user_id, data) => {
         // Update quantity
         const newQuantity = existingItem.quantity + quantity;
 
-        if (newQuantity > adjusted.adjustedStock) {
-            throw new Error(`Only ${adjusted.adjustedStock} items in stock`);
+        if (newQuantity > adjustedStock) {
+            throw new Error(`Only ${adjustedStock} items in stock`);
         }
 
         return await prisma.cartItem.update({
@@ -116,7 +116,7 @@ const addItemToCart = async (user_id, data) => {
             product_id: product.uuid,
             variant_id: variant_id ? variant_id : null,
             quantity,
-            price_snapshot: adjusted.adjustedPrice
+            price_snapshot: adjustedPrice
         }
     });
 
