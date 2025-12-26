@@ -97,21 +97,31 @@ const updateReview = async (user_id, data) => {
 }
 
 /**
- * GET PRODUCT REVIEWS
+ * GET PRODUCT REVIEWS (with pagination)
  */
-const getProductReviews = async (product_id) => {
-    return await prisma.review.findMany({
-        where: { product_id },
-        include: {
-            user: {
-                select: {
-                    uuid: true,
-                    name: true
+const getProductReviews = async (product_id, query = {}) => {
+    const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
+    const { page, limit, skip } = parsePaginationParams(query);
+
+    const [reviews, total] = await Promise.all([
+        prisma.review.findMany({
+            where: { product_id },
+            include: {
+                user: {
+                    select: {
+                        uuid: true,
+                        name: true
+                    }
                 }
-            }
-        },
-        orderBy: { created_at: "desc" }
-    })
+            },
+            orderBy: { created_at: "desc" },
+            skip,
+            take: limit
+        }),
+        prisma.review.count({ where: { product_id } })
+    ]);
+
+    return buildPaginationResponse(page, limit, total, reviews);
 }
 
 module.exports = {

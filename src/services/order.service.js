@@ -155,27 +155,37 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
     return result
 }
 
-const getOrders = async (user_id) => {
-    return await prisma.order.findMany({
-        where: { user_id },
-        select: {
-            uuid: true,
-            order_code: true,
-            grand_total: true,
-            payment_status: true,
-            fulfillment_status: true,
-            created_at: true,
-            items: {
-                select: {
-                    quantity: true,
-                    price: true,
-                    product: { select: { name: true } },
-                    variant: { select: { name: true } }
-                }
+const getOrders = async (user_id, query = {}) => {
+    const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
+    const { page, limit, skip } = parsePaginationParams(query);
+
+    const [orders, total] = await Promise.all([
+        prisma.order.findMany({
+            where: { user_id },
+            select: {
+                uuid: true,
+                order_code: true,
+                grand_total: true,
+                payment_status: true,
+                fulfillment_status: true,
+                created_at: true,
+                items: {
+                    select: {
+                        quantity: true,
+                        price: true,
+                        product: { select: { name: true } },
+                        variant: { select: { name: true } }
+                    }
+                },
             },
-        },
-        orderBy: { created_at: 'desc' }
-    });
+            orderBy: { created_at: 'desc' },
+            skip,
+            take: limit
+        }),
+        prisma.order.count({ where: { user_id } })
+    ]);
+
+    return buildPaginationResponse(page, limit, total, orders);
 }
 
 const getOrderDetails = async (user_id, order_uuid) => {

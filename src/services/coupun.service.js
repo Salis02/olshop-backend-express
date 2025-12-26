@@ -88,8 +88,20 @@ const remove = async (id) => {
     })
 }
 
-const getAll = async () => {
-    return await prisma.coupon.findMany()
+const getAll = async (query = {}) => {
+    const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
+    const { page, limit, skip } = parsePaginationParams(query);
+
+    const [coupons, total] = await Promise.all([
+        prisma.coupon.findMany({
+            skip,
+            take: limit,
+            orderBy: { created_at: 'desc' }
+        }),
+        prisma.coupon.count()
+    ]);
+
+    return buildPaginationResponse(page, limit, total, coupons);
 }
 
 
