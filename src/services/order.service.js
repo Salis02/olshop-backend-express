@@ -67,8 +67,9 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
     const shipping_fee = 0;
     const grand_total = total_price - discount_total + shipping_fee
 
-    // 4. Create order code
-    const orderCode = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    // 4. Create order code using crypto for better uniqueness
+    const crypto = require('crypto');
+    const orderCode = `ORD-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     // 5. Create order + order items in one transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -102,9 +103,22 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
 
         // B. Reduce product stok and variant (IMPORTANT)
         for (const item of cart.items) {
-            const stockAdjustment = item.variant?.stock_adjustment || 0
+            // Get current product stock
+            const product = await tx.product.findUnique({
+                where: { uuid: item.product_id },
+                select: { stock: true, name: true }
+            });
 
-            // Reduce mainStock = product.stock + variant.stock_adjustment,
+            if (!product) {
+                throw new Error(`Product ${item.product_id} not found`);
+            }
+
+            // Check if stock is sufficient
+            if (product.stock < item.quantity) {
+                throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
+            }
+
+            // Reduce mainStock = product.stock
             await tx.product.update({
                 where: { uuid: item.product_id },
                 data: {

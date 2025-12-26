@@ -100,8 +100,7 @@ const updatePassword = async (uuid, data, actor) => {
         target_type: 'User',
         target_id: uuid,
         meta: {
-            oldPassword: hashedOldPassword,
-            newPassword: hashedNewPassword
+            message: 'Password updated successfully'
         }
     })
 

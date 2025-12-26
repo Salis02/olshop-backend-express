@@ -73,7 +73,7 @@ const getPaymentDetail = async (user_id, id) => {
 }
 
 // Manual update payment status
-const updatePaymentStatus = async (id, status, paid_at = null) => {
+const updatePaymentStatus = async (id, data) => {
 
     const payload = validateRequest(updatePaymentStatusSchema, data)
 

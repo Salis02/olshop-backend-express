@@ -53,7 +53,7 @@ const registerUser = async (data, ip) => {
     });
 
     return {
-        uuid: newUser.id,
+        uuid: newUser.uuid,
         name: newUser.name,
         email: newUser.email
     };
@@ -153,7 +153,7 @@ const refreshTokenService = async (refreshToken) => {
 
     return {
         accessToken: newAccessToken,
-        refreshToken: newAccessToken
+        refreshToken: newRefreshToken
     }
 }
 
@@ -162,7 +162,7 @@ const logoutUser = async (user_id) => {
         where: { uuid: user_id }
     })
 
-    if (!user) throw new Error("Who the fuck are you?");
+    if (!user) throw new Error("User not found");
 
     await prisma.user.update({
         where: { uuid: user_id },

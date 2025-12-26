@@ -90,8 +90,8 @@ const updateReview = async (user_id, data) => {
     return await prisma.review.update({
         where: { id: existing.id },
         data: {
-            rating,
-            comment
+            rating: payload.rating,
+            comment: payload.comment
         }
     })
 }
