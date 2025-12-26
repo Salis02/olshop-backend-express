@@ -232,8 +232,80 @@ const getOrderDetails = async (user_id, order_uuid) => {
     return order;
 }
 
+const cancelOrder = async (user_id, order_uuid, reason = 'Customer request') => {
+    const order = await prisma.order.findFirst({
+        where: {
+            uuid: order_uuid,
+            user_id
+        },
+        include: {
+            items: {
+                include: {
+                    product: true
+                }
+            }
+        }
+    });
+
+    if (!order) {
+        throw new Error('Order not found');
+    }
+
+    // Can only cancel if not paid or not shipped
+    if (order.payment_status === 'success' && order.fulfillment_status !== 'unfulfilled') {
+        throw new Error('Cannot cancel order that has been shipped');
+    }
+
+    if (order.fulfillment_status === 'delivered') {
+        throw new Error('Cannot cancel delivered order');
+    }
+
+    if (order.fulfillment_status === 'cancelled') {
+        throw new Error('Order already cancelled');
+    }
+
+    // Use transaction to restore stock and update statuses
+    return await prisma.$transaction(async (tx) => {
+        // Restore stock
+        for (const item of order.items) {
+            await tx.product.update({
+                where: { uuid: item.product_id },
+                data: {
+                    stock: {
+                        increment: item.quantity
+                    }
+                }
+            });
+        }
+
+        // Restore coupon usage if used
+        if (order.coupon_id) {
+            await tx.coupon.update({
+                where: { id: order.coupon_id },
+                data: {
+                    current_usage: {
+                        decrement: 1
+                    }
+                }
+            });
+        }
+
+        // Update order status
+        const cancelled = await tx.order.update({
+            where: { uuid: order_uuid },
+            data: {
+                fulfillment_status: 'cancelled',
+                payment_status: order.payment_status === 'pending' ? 'failed' : 'refunded'
+            }
+        });
+
+        return cancelled;
+    });
+};
+
 module.exports = {
     createOrder,
     getOrders,
-    getOrderDetails
+    getOrderDetails,
+    cancelOrder
 };
