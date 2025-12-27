@@ -7,7 +7,7 @@ const addressController = require('../controllers/address.controller.js');
 
 router.use(
     authMiddleware,
-    allowRoles('USER')
+    allowRoles('USER', 'SELLER', 'ADMIN')
 );
 
 router.get('/', addressController.list);
