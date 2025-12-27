@@ -3,7 +3,7 @@ const { success, error } = require('../utils/response');
 
 const getCart = async (req, res) => {
     try {
-        const { user_id } = req.user.uuid;
+        const user_id = req.user.uuid;
         const cart = await cartService.getCart(user_id);
         return success(res, cart, 'Cart retrieved successfully', 200);
     } catch (err) {
@@ -46,8 +46,8 @@ const removeItem = async (req, res) => {
 
 const clearCart = async (req, res) => {
     try {
-        const { uuid } = req.params;
-        await cartService.clearCart(uuid);
+        const user_id = req.user.uuid;
+        await cartService.clearCart(user_id);
         return success(res, null, 'Cart cleared successfully', 200);
     } catch (err) {
         return error(res, err.message, 500);
