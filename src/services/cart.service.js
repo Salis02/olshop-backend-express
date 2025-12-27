@@ -2,6 +2,10 @@ const prisma = require('../prisma/client');
 const { validateRequest } = require('../utils/validate');
 const { addCartItemSchema, updateCartItemSchema } = require('../validators/cart.validator');
 const { calculateAdjustedValues } = require('../utils/helper')
+const { NotFoundError, ValidationError } = require('../utils/AppError');
+const { validateRequest } = require('../utils/validate');
+const { addCartItemSchema, updateCartItemSchema } = require('../validators/cart.validator');
+const { calculateAdjustedValues } = require('../utils/helper')
 
 const getCart = async (user_id) => {
     let cart = await prisma.cart.findFirst({
@@ -62,7 +66,7 @@ const addItemToCart = async (user_id, data) => {
     });
 
     if (!product) {
-        throw new Error('Product not found or not published');
+        throw new NotFoundError('Product not found or not published');
     }
 
     // If variant product exist -> fetch variant and use variant stock
@@ -70,7 +74,7 @@ const addItemToCart = async (user_id, data) => {
     if (variant_id) {
         variant = product.variants.find(v => v.id === variant_id)
 
-        if (!variant) throw new Error("Variant not valid");
+        if (!variant) throw new ValidationError("Variant not valid");
     }
 
     const { adjustedPrice, adjustedStock } = calculateAdjustedValues(product, variant)
@@ -101,7 +105,7 @@ const addItemToCart = async (user_id, data) => {
         const newQuantity = existingItem.quantity + quantity;
 
         if (newQuantity > adjustedStock) {
-            throw new Error(`Only ${adjustedStock} items in stock`);
+            throw new ValidationError(`Only ${adjustedStock} items in stock`);
         }
 
         return await prisma.cartItem.update({
@@ -156,7 +160,7 @@ const updateCartItem = async (user_id, item_id, quantityData) => {
     });
 
     if (!cartItem) {
-        throw new Error('Cart item not found');
+        throw new NotFoundError('Cart item not found');
     }
 
     const { adjustedStock } = calculateAdjustedValues(cartItem.product, cartItem.variant)

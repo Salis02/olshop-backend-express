@@ -4,6 +4,17 @@ const { validateRequest } = require('../utils/validate');
 const { createProductSchema, updateProductSchema } = require('../validators/product.validator');
 const log = require('../services/activity.service')
 const { normalizeImage } = require('../utils/helper')
+const {
+    NotFoundError,
+    ValidationError,
+    ForbiddenError,
+    ConflictError
+} = require('../utils/AppError');
+const prisma = require('../prisma/client');
+const { validateRequest } = require('../utils/validate');
+const { createProductSchema, updateProductSchema } = require('../validators/product.validator');
+const log = require('../services/activity.service')
+const { normalizeImage } = require('../utils/helper')
 
 const getAllProducts = async (filters = {}) => {
     let {
@@ -223,11 +234,11 @@ const getProductSoftDelete = async () => {
 const createProduct = async (data, user) => {
 
     if (!user) {
-        throw new Error('User UUID is required to create a product');
+        throw new ValidationError('User UUID is required to create a product');
     }
 
     if (user.role !== 'SELLER' && user.role !== 'ADMIN') {
-        throw new Error("You are not allowed to create product");
+        throw new ForbiddenError("You are not allowed to create product");
     }
 
     const {
@@ -243,7 +254,7 @@ const createProduct = async (data, user) => {
 
     const existingSlug = await prisma.product.findUnique({ where: { slug: slug } })
 
-    if (existingSlug) throw new Error("Slug already exist");
+    if (existingSlug) throw new ConflictError("Slug already exist");
 
     const sku = `SKU-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -283,10 +294,10 @@ const createProduct = async (data, user) => {
 
 const updateProduct = async (uuid, data, user) => {
     const product = await prisma.product.findUnique({ where: { uuid } });
-    if (!product) throw new Error('Product not found');
+    if (!product) throw new NotFoundError('Product not found');
 
     if (user.role_name === 'SELLER' && product.created_by !== user.uuid) {
-        throw new Error("You don't own this product!");
+        throw new ForbiddenError("You don't own this product!");
     }
 
     const {
@@ -338,7 +349,7 @@ const updateProduct = async (uuid, data, user) => {
 const softDelete = async (uuid, actor) => {
     const product = await prisma.product.findUnique({ where: { uuid } });
     if (!product) {
-        throw new Error('Product not found');
+        throw new NotFoundError('Product not found');
     }
     const softDelete = await prisma.product.update({
         where: { uuid },
@@ -376,9 +387,9 @@ const restoreProduct = async (uuid, actor) => {
         }
     })
 
-    if (!product) throw new Error("Product not found");
+    if (!product) throw new NotFoundError("Product not found");
 
-    if (product.deleted_at === null) throw new Error("Product is not deleted");
+    if (product.deleted_at === null) throw new ValidationError("Product is not deleted");
 
     const restoreProduct = await prisma.product.update({
         where: {
@@ -418,7 +429,7 @@ const forceDelete = async (uuid) => {
         }
     })
 
-    if (!product) throw new Error("Product not found");
+    if (!product) throw new NotFoundError("Product not found");
 
     return await prisma.product.delete({
         where: {

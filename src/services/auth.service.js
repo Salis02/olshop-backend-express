@@ -6,6 +6,20 @@ const { validateRequest } = require('../utils/validate');
 const { registerSchema, loginSchema } = require('../validators/auth.validator');
 const { generateResetToken } = require('../utils/auth/generateToken');
 const { sendEmail } = require('../utils/auth/email');
+const {
+    ValidationError,
+    NotFoundError,
+    UnauthorizedError,
+    ForbiddenError,
+    ConflictError
+} = require('../utils/AppError');
+const bcrypt = require('bcryptjs');
+const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../utils/auth/jwt');
+const { rateLimitLogin, resetLoginAttempt, rateLimitRegister } = require('../utils/security/rateLimiter')
+const { validateRequest } = require('../utils/validate');
+const { registerSchema, loginSchema } = require('../validators/auth.validator');
+const { generateResetToken } = require('../utils/auth/generateToken');
+const { sendEmail } = require('../utils/auth/email');
 
 const registerUser = async (data, ip) => {
 
@@ -25,7 +39,7 @@ const registerUser = async (data, ip) => {
 
     //Jika ada, throw error
     if (existUser) {
-        throw new Error('User or email already exists');
+        throw new ConflictError('User or email already exists');
     }
 
     //Cek Role 'USER' dari tabel Role, default role untuk user baru
@@ -78,17 +92,17 @@ const loginUser = async (data, ip) => {
 
     //Jika user tidak ditemukan, throw error
     if (!user) {
-        throw new Error('Invalid email or password');
+        throw new UnauthorizedError('Invalid email or password');
     }
 
     if (user.deleted_at !== null) {
-        throw new Error("Account is deleted");
+        throw new ForbiddenError("Account is deleted");
     }
 
     //Cek password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-        throw new Error('Invalid email or password');
+        throw new UnauthorizedError('Invalid email or password');
     }
 
     resetLoginAttempt(ip)
@@ -124,17 +138,17 @@ const loginUser = async (data, ip) => {
 
 const refreshTokenService = async (refreshToken) => {
 
-    if (!refreshToken) throw new Error("Refresh token rrequired");
+    if (!refreshToken) throw new UnauthorizedError("Refresh token required");
 
     const payload = verifyRefreshToken(refreshToken)
 
-    if (!payload) throw new Error("Invalid or expired refresh token!");
+    if (!payload) throw new UnauthorizedError("Invalid or expired refresh token!");
 
     const user = await prisma.user.findUnique({
         where: { uuid: payload.uuid }
     })
 
-    if (!user || user.remember_token !== refreshToken) throw new Error("Refresh token not found");
+    if (!user || user.remember_token !== refreshToken) throw new UnauthorizedError("Refresh token not found");
 
     const newpayload = {
         uuid: user.uuid,
@@ -162,7 +176,7 @@ const logoutUser = async (user_id) => {
         where: { uuid: user_id }
     })
 
-    if (!user) throw new Error("User not found");
+    if (!user) throw new NotFoundError("User not found");
 
     await prisma.user.update({
         where: { uuid: user_id },
@@ -221,9 +235,9 @@ const resetPassword = async (token, newPassword) => {
         }
     })
 
-    if (!record || record.used) throw new Error("Invalid or used token");
+    if (!record || record.used) throw new ValidationError("Invalid or used token");
 
-    if (new Date() > record.expires_at) throw new Error("Token expired")
+    if (new Date() > record.expires_at) throw new ValidationError("Token expired")
 
     const newHashedPassword = await bcrypt.hash(newPassword, 10)
 

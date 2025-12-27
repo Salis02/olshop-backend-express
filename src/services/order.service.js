@@ -1,10 +1,12 @@
 const prisma = require('../prisma/client');
 const couponService = require('../services/coupun.service')
+const { NotFoundError, ValidationError } = require('../utils/AppError');
+const couponService = require('../services/coupun.service')
 
 const createOrder = async (user_id, shipping_address_id, coupon_code = null) => {
 
     if (!user_id) {
-        throw new Error('User ID is required to create an order');
+        throw new ValidationError('User ID is required to create an order');
     }
 
     // 1. Get completely cart include product and variant
@@ -33,7 +35,7 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
     });
 
     if (!cart || cart.items.length === 0) {
-        throw new Error('Cart is empty or does not exist');
+        throw new ValidationError('Cart is empty or does not exist');
     }
 
     // 2. Sum total price from price_snapshot
@@ -50,7 +52,7 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
         coupon = await couponService.validateCoupon(coupon_code, user_id)
 
         // Minimum order
-        if (coupon.min_order && total_price < coupon.min_order) throw new Error(`Minimun order for coupun is ${coupon.min_order}`);
+        if (coupon.min_order && total_price < coupon.min_order) throw new ValidationError(`Minimun order for coupun is ${coupon.min_order}`);
 
         // Calculate discount
         if (coupon.discount_type === 'percentage') {
@@ -110,12 +112,12 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
             });
 
             if (!product) {
-                throw new Error(`Product ${item.product_id} not found`);
+                throw new NotFoundError(`Product ${item.product_id} not found`);
             }
 
             // Check if stock is sufficient
             if (product.stock < item.quantity) {
-                throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
+                throw new ValidationError(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
             }
 
             // Reduce mainStock = product.stock
@@ -227,7 +229,7 @@ const getOrderDetails = async (user_id, order_uuid) => {
     });
 
     if (!order) {
-        throw new Error('Order not found');
+        throw new NotFoundError('Order not found');
     }
     return order;
 }
@@ -253,15 +255,15 @@ const cancelOrder = async (user_id, order_uuid, reason = 'Customer request') => 
 
     // Can only cancel if not paid or not shipped
     if (order.payment_status === 'success' && order.fulfillment_status !== 'unfulfilled') {
-        throw new Error('Cannot cancel order that has been shipped');
+        throw new ValidationError('Cannot cancel order that has been shipped');
     }
 
     if (order.fulfillment_status === 'delivered') {
-        throw new Error('Cannot cancel delivered order');
+        throw new ValidationError('Cannot cancel delivered order');
     }
 
     if (order.fulfillment_status === 'cancelled') {
-        throw new Error('Order already cancelled');
+        throw new ValidationError('Order already cancelled');
     }
 
     // Use transaction to restore stock and update statuses
