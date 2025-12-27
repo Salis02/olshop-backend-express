@@ -1,57 +1,37 @@
 const cartService = require('../services/cart.service');
-const { success, error } = require('../utils/response');
+const { success } = require('../utils/response');
 
 const getCart = async (req, res) => {
-    try {
-        const user_id = req.user.uuid;
-        const cart = await cartService.getCart(user_id);
-        return success(res, cart, 'Cart retrieved successfully', 200);
-    } catch (err) {
-        return error(res, err.message, 500);
-    }
+    const user_id = req.user.uuid;
+    const cart = await cartService.getCart(user_id);
+    return success(res, cart, 'Cart retrieved successfully', 200);
 }
 
 const addItem = async (req, res) => {
-    try {
-        const item = await cartService.addItemToCart(req.user.uuid, req.body);
-        return success(res, item, 'Item added to cart successfully', 201);
-    } catch (err) {
-        return error(res, err.message, 500);
-    }
+    const item = await cartService.addItemToCart(req.user.uuid, req.body);
+    return success(res, item, 'Item added to cart successfully', 201);
 }
 
 const updateItem = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const item = await cartService.updateCartItem(
-            req.user.uuid,
-            Number(id),
-            req.body
-        );
-        return success(res, item, 'Cart item updated successfully', 200);
-    } catch (err) {
-        return error(res, err.message, 500);
-    }
+    const { id } = req.params;
+    const item = await cartService.updateCartItem(
+        req.user.uuid,
+        Number(id),
+        req.body
+    );
+    return success(res, item, 'Cart item updated successfully', 200);
 }
 
 const removeItem = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await cartService.removeCartItem(req.user.uuid, Number(id));
-        return success(res, null, 'Cart item removed successfully', 200);
-    } catch (err) {
-        return error(res, err.message, 500);
-    }
+    const { id } = req.params;
+    await cartService.removeCartItem(req.user.uuid, Number(id));
+    return success(res, null, 'Cart item removed successfully', 200);
 }
 
 const clearCart = async (req, res) => {
-    try {
-        const user_id = req.user.uuid;
-        await cartService.clearCart(user_id);
-        return success(res, null, 'Cart cleared successfully', 200);
-    } catch (err) {
-        return error(res, err.message, 500);
-    }
+    const user_id = req.user.uuid;
+    await cartService.clearCart(user_id);
+    return success(res, null, 'Cart cleared successfully', 200);
 }
 
 module.exports = {
