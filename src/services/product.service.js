@@ -101,6 +101,11 @@ const getAllProducts = async (filters = {}) => {
                         select: {
                             rating: true
                         }
+                    },
+                    creator: {
+                        select: {
+                            name: true
+                        }
                     }
                 },
                 orderBy: { created_at: 'desc' } // fallback
@@ -128,6 +133,11 @@ const getAllProducts = async (filters = {}) => {
                     reviews: {
                         select: {
                             rating: true
+                        }
+                    },
+                    creator: {
+                        select: {
+                            name: true
                         }
                     }
                 },
@@ -197,6 +207,11 @@ const getProductById = async (uuid) => {
             images: true,
             variants: true,
             attributes: true,
+            creator: {
+                select: {
+                    name: true
+                }
+            },
             reviews: {
                 include: {
                     user: {
