@@ -10,11 +10,6 @@ const {
     ForbiddenError,
     ConflictError
 } = require('../utils/AppError');
-const prisma = require('../prisma/client');
-const { validateRequest } = require('../utils/validate');
-const { createProductSchema, updateProductSchema } = require('../validators/product.validator');
-const log = require('../services/activity.service')
-const { normalizeImage } = require('../utils/helper')
 
 const getAllProducts = async (filters = {}) => {
     let {

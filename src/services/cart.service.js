@@ -3,9 +3,6 @@ const { validateRequest } = require('../utils/validate');
 const { addCartItemSchema, updateCartItemSchema } = require('../validators/cart.validator');
 const { calculateAdjustedValues } = require('../utils/helper')
 const { NotFoundError, ValidationError } = require('../utils/AppError');
-const { validateRequest } = require('../utils/validate');
-const { addCartItemSchema, updateCartItemSchema } = require('../validators/cart.validator');
-const { calculateAdjustedValues } = require('../utils/helper')
 
 const getCart = async (user_id) => {
     let cart = await prisma.cart.findFirst({

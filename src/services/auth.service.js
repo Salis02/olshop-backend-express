@@ -13,13 +13,6 @@ const {
     ForbiddenError,
     ConflictError
 } = require('../utils/AppError');
-const bcrypt = require('bcryptjs');
-const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../utils/auth/jwt');
-const { rateLimitLogin, resetLoginAttempt, rateLimitRegister } = require('../utils/security/rateLimiter')
-const { validateRequest } = require('../utils/validate');
-const { registerSchema, loginSchema } = require('../validators/auth.validator');
-const { generateResetToken } = require('../utils/auth/generateToken');
-const { sendEmail } = require('../utils/auth/email');
 
 const registerUser = async (data, ip) => {
 

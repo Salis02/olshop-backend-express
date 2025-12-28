@@ -1,7 +1,6 @@
 const prisma = require('../prisma/client');
 const couponService = require('../services/coupun.service')
 const { NotFoundError, ValidationError } = require('../utils/AppError');
-const couponService = require('../services/coupun.service')
 
 const createOrder = async (user_id, shipping_address_id, coupon_code = null) => {
 
