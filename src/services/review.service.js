@@ -1,5 +1,7 @@
 const prisma = require('../prisma/client')
 const { validateRequest } = require('../utils/validate')
+const { buildSearchQuery } = require('../utils/search');
+const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
 const { createReviewSchema, updateReviewSchema } = require('../validators/review.validator')
 
 /**
@@ -100,12 +102,18 @@ const updateReview = async (user_id, data) => {
  * GET PRODUCT REVIEWS (with pagination)
  */
 const getProductReviews = async (product_id, query = {}) => {
-    const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
     const { page, limit, skip } = parsePaginationParams(query);
+    const { search } = query;
+
+    const where = { product_id };
+
+    if (search) {
+        Object.assign(where, buildSearchQuery(search, ['comment']));
+    }
 
     const [reviews, total] = await Promise.all([
         prisma.review.findMany({
-            where: { product_id },
+            where,
             include: {
                 user: {
                     select: {
@@ -118,7 +126,7 @@ const getProductReviews = async (product_id, query = {}) => {
             skip,
             take: limit
         }),
-        prisma.review.count({ where: { product_id } })
+        prisma.review.count({ where })
     ]);
 
     return buildPaginationResponse(page, limit, total, reviews);

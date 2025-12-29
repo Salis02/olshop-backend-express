@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const { validateRequest } = require('../utils/validate');
 const log = require('../services/activity.service')
 const { updateProfileSchema, updatePasswordSchema } = require('../validators/user.validator');
+const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
+const { buildSearchQuery } = require('../utils/search');
 
 const getProfile = async (uuid) => {
     const user = await prisma.user.findUnique({
@@ -25,27 +27,41 @@ const getProfile = async (uuid) => {
     return user
 }
 
-const getAllUser = async () => {
-    const user = await prisma.user.findMany({
-        select: {
-            uuid: true,
-            name: true,
-            email: true,
-            password: false,
-            phone: true,
-            created_at: true,
-            updated_at: true,
-            role: {
-                select: {
-                    name: true
+const getAllUser = async (query = {}) => {
+    const { page, limit, skip } = parsePaginationParams(query);
+    const { search } = query;
+
+    const where = {};
+
+    if (search) {
+        Object.assign(where, buildSearchQuery(search, ['name', 'email', 'phone']));
+    }
+
+    const [users, total] = await Promise.all([
+        prisma.user.findMany({
+            where,
+            select: {
+                uuid: true,
+                name: true,
+                email: true,
+                password: false,
+                phone: true,
+                created_at: true,
+                updated_at: true,
+                role: {
+                    select: {
+                        name: true
+                    }
                 }
-            }
-        }
-    });
+            },
+            skip,
+            take: limit,
+            orderBy: { created_at: 'desc' }
+        }),
+        prisma.user.count({ where })
+    ]);
 
-    if (!user) throw new Error("Users data not found");
-
-    return user
+    return buildPaginationResponse(page, limit, total, users);
 }
 
 const updateProfile = async (uuid, data, actor) => {

@@ -1,6 +1,7 @@
 const prisma = require('../prisma/client')
 const slugify = require('slugify')
 const { validateRequest } = require('../utils/validate')
+const { buildSearchQuery } = require('../utils/search');
 const { createCouponSchema } = require('../validators/coupon.validator')
 
 const create = async (data) => {
@@ -91,14 +92,21 @@ const remove = async (id) => {
 const getAll = async (query = {}) => {
     const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
     const { page, limit, skip } = parsePaginationParams(query);
+    const { search } = query;
+
+    const where = {};
+    if (search) {
+        Object.assign(where, buildSearchQuery(search, ['code', 'description']));
+    }
 
     const [coupons, total] = await Promise.all([
         prisma.coupon.findMany({
+            where,
             skip,
             take: limit,
             orderBy: { created_at: 'desc' }
         }),
-        prisma.coupon.count()
+        prisma.coupon.count({ where })
     ]);
 
     return buildPaginationResponse(page, limit, total, coupons);

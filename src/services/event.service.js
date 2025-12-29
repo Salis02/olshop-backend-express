@@ -2,6 +2,8 @@ const prisma = require('../prisma/client')
 const slugify = require('slugify')
 const { validateRequest } = require('../utils/validate')
 const { createEventSchema, updateEventSchema } = require('../validators/event.validator')
+const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
+const { buildSearchQuery } = require('../utils/search');
 
 const create = async (data) => {
 
@@ -128,12 +130,29 @@ const remove = async (id) => {
     })
 }
 
-const getAll = async () => {
-    return await prisma.event.findMany({
-        where: {
-            deleted_at: null
-        }
-    })
+const getAll = async (query = {}) => {
+    const { page, limit, skip } = parsePaginationParams(query);
+    const { search } = query;
+
+    const where = {
+        deleted_at: null
+    };
+
+    if (search) {
+        Object.assign(where, buildSearchQuery(search, ['name', 'description', 'status']));
+    }
+
+    const [events, total] = await Promise.all([
+        prisma.event.findMany({
+            where,
+            orderBy: { start_date: 'desc' },
+            skip,
+            take: limit
+        }),
+        prisma.event.count({ where })
+    ]);
+
+    return buildPaginationResponse(page, limit, total, events);
 }
 
 const getOne = async (id) => {

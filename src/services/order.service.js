@@ -1,5 +1,7 @@
 const prisma = require('../prisma/client');
 const couponService = require('../services/coupun.service')
+const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
+const { buildSearchQuery } = require('../utils/search');
 const { NotFoundError, ValidationError } = require('../utils/AppError');
 
 const createOrder = async (user_id, shipping_address_id, coupon_code = null) => {
@@ -157,12 +159,18 @@ const createOrder = async (user_id, shipping_address_id, coupon_code = null) => 
 }
 
 const getOrders = async (user_id, query = {}) => {
-    const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
     const { page, limit, skip } = parsePaginationParams(query);
+    const { search } = query;
+
+    const where = { user_id };
+
+    if (search) {
+        Object.assign(where, buildSearchQuery(search, ['order_code']));
+    }
 
     const [orders, total] = await Promise.all([
         prisma.order.findMany({
-            where: { user_id },
+            where,
             select: {
                 uuid: true,
                 order_code: true,
@@ -183,7 +191,7 @@ const getOrders = async (user_id, query = {}) => {
             skip,
             take: limit
         }),
-        prisma.order.count({ where: { user_id } })
+        prisma.order.count({ where })
     ]);
 
     return buildPaginationResponse(page, limit, total, orders);
