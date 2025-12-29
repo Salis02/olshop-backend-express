@@ -110,10 +110,20 @@ const loginUser = async (data, ip) => {
     const accessToken = generateToken(payload)
     const refreshToken = generateRefreshToken(payload)
 
-    // Save new token
-    await prisma.user.update({
-        where: { uuid: user.uuid },
-        data: { remember_token: refreshToken }
+    // Decode refresh token to get expiration time for DB
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.decode(refreshToken);
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    // Save new token to RefreshToken table
+    await prisma.refreshToken.create({
+        data: {
+            token: refreshToken,
+            user_id: user.uuid,
+            user_agent: ip.userAgent || null,
+            ip_address: typeof ip === 'string' ? ip : ip.ip,
+            expires_at: expiresAt
+        }
     })
 
     return {
@@ -129,19 +139,29 @@ const loginUser = async (data, ip) => {
     }
 }
 
-const refreshTokenService = async (refreshToken) => {
+const refreshTokenService = async (refreshToken, ipData = {}) => {
 
     if (!refreshToken) throw new UnauthorizedError("Refresh token required");
 
-    const payload = verifyRefreshToken(refreshToken)
-
-    if (!payload) throw new UnauthorizedError("Invalid or expired refresh token!");
-
-    const user = await prisma.user.findUnique({
-        where: { uuid: payload.uuid }
+    // 1. Find token in DB
+    const tokenRecord = await prisma.refreshToken.findUnique({
+        where: { token: refreshToken },
+        include: { user: { include: { role: true } } }
     })
 
-    if (!user || user.remember_token !== refreshToken) throw new UnauthorizedError("Refresh token not found");
+    // 2. Security Check: Token Reuse Detection or Invalid Token
+    if (!tokenRecord) {
+        throw new UnauthorizedError("Invalid refresh token (Reuse detected or not found)");
+    }
+
+    // 3. Check Expiry
+    if (new Date() > tokenRecord.expires_at) {
+        // Delete expired token
+        await prisma.refreshToken.delete({ where: { id: tokenRecord.id } });
+        throw new UnauthorizedError("Refresh token expired");
+    }
+
+    const user = tokenRecord.user;
 
     const newpayload = {
         uuid: user.uuid,
@@ -152,11 +172,27 @@ const refreshTokenService = async (refreshToken) => {
     const newAccessToken = generateToken(newpayload)
     const newRefreshToken = generateRefreshToken(newpayload)
 
-    // Rotation : change old token with new one
-    await prisma.user.update({
-        where: { uuid: user.uuid },
-        data: { remember_token: newRefreshToken }
-    })
+    // Calculate new expiry
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.decode(newRefreshToken);
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    // 4. Token Rotation: Delete old, Create new
+    // Transaction to ensure atomicity
+    await prisma.$transaction([
+        prisma.refreshToken.delete({
+            where: { id: tokenRecord.id }
+        }),
+        prisma.refreshToken.create({
+            data: {
+                token: newRefreshToken,
+                user_id: user.uuid,
+                user_agent: ipData.userAgent || tokenRecord.user_agent,
+                ip_address: ipData.ip || tokenRecord.ip_address,
+                expires_at: expiresAt
+            }
+        })
+    ]);
 
     return {
         accessToken: newAccessToken,
@@ -164,17 +200,20 @@ const refreshTokenService = async (refreshToken) => {
     }
 }
 
-const logoutUser = async (user_id) => {
-    const user = await prisma.user.findUnique({
-        where: { uuid: user_id }
-    })
+const logoutUser = async (refreshToken) => {
+    if (!refreshToken) return; // Nothing to logout if no token provided
 
-    if (!user) throw new NotFoundError("User not found");
-
-    await prisma.user.update({
-        where: { uuid: user_id },
-        data: { remember_token: null }
-    })
+    // Delete the specific refresh token session
+    // We use deleteMany to avoid error if token not found (idempotent-ish)
+    // or findUnique then delete. deleteMany is safer if key constraint exists but we want to be loose.
+    // 'token' is unique, so delete is fine. catch error if not found.
+    try {
+        await prisma.refreshToken.delete({
+            where: { token: refreshToken }
+        })
+    } catch (e) {
+        // Ignore if token not found, maybe already logged out
+    }
 }
 
 const forgotPassword = async (email) => {
