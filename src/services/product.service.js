@@ -4,6 +4,8 @@ const { validateRequest } = require('../utils/validate');
 const { createProductSchema, updateProductSchema } = require('../validators/product.validator');
 const log = require('../services/activity.service')
 const { normalizeImage } = require('../utils/helper')
+const { parsePaginationParams, buildPaginationResponse } = require('../utils/pagination');
+const { buildSearchQuery } = require('../utils/search');
 const {
     NotFoundError,
     ValidationError,
@@ -26,9 +28,7 @@ const getAllProducts = async (filters = {}) => {
     } = filters;
 
     // Pagination Product
-    page = Number(page) || 1;
-    limit = Number(limit) || 10;
-    const skip = (page - 1) * limit;
+    const { page: pageNum, limit: limitNum, skip } = parsePaginationParams({ page, limit });
 
     const where = {};
 
@@ -39,10 +39,8 @@ const getAllProducts = async (filters = {}) => {
 
     // Search by name
     if (search) {
-        where.name = {
-            contains: search,
-            mode: 'insensitive'
-        }
+        const searchQuery = buildSearchQuery(search, ['name']);
+        Object.assign(where, searchQuery);
     }
 
     // Filter by category
@@ -143,7 +141,7 @@ const getAllProducts = async (filters = {}) => {
                 },
                 orderBy,
                 skip,
-                take: limit
+                take: limitNum
             }),
 
             prisma.product.count({ where })
@@ -175,28 +173,12 @@ const getAllProducts = async (filters = {}) => {
         }
 
         // Manual pagination
-        const paginated = processed.slice(skip, skip + limit);
+        const paginated = processed.slice(skip, skip + limitNum);
 
-        return {
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            },
-            data: paginated
-        }
+        return buildPaginationResponse(pageNum, limitNum, total, paginated);
     }
     // NORMAL MODE → DB handles pagination
-    return {
-        pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit)
-        },
-        data: processed
-    };
+    return buildPaginationResponse(pageNum, limitNum, total, processed);
 }
 
 const getProductById = async (uuid) => {
