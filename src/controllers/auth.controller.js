@@ -18,7 +18,7 @@ const login = async (req, res) => {
 }
 
 const refreshToken = async (req, res) => {
-    const { refreshToken } = req.body;
+    const { refreshToken } = req.body || {};
 
     // Collect IP and User Agent for rotation tracking
     const ip = req.ip || req.connection.remoteAddress || 'unknown';
@@ -36,7 +36,7 @@ const logout = async (req, res) => {
     }
 
     if (req.user?.uuid) {
-        const { refreshToken } = req.body;
+        const { refreshToken } = req.body || {};
         if (refreshToken) {
             await authService.logoutUser(refreshToken)
         }

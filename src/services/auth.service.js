@@ -1,5 +1,6 @@
 const prisma = require('../prisma/client');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../utils/auth/jwt');
 const { rateLimitLogin, resetLoginAttempt, rateLimitRegister } = require('../utils/security/rateLimiter')
 const { validateRequest } = require('../utils/validate');
@@ -111,7 +112,6 @@ const loginUser = async (data, ip) => {
     const refreshToken = generateRefreshToken(payload)
 
     // Decode refresh token to get expiration time for DB
-    const jwt = require('jsonwebtoken');
     const decoded = jwt.decode(refreshToken);
     const expiresAt = new Date(decoded.exp * 1000);
 
@@ -173,7 +173,6 @@ const refreshTokenService = async (refreshToken, ipData = {}) => {
     const newRefreshToken = generateRefreshToken(newpayload)
 
     // Calculate new expiry
-    const jwt = require('jsonwebtoken');
     const decoded = jwt.decode(newRefreshToken);
     const expiresAt = new Date(decoded.exp * 1000);
 
