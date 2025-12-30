@@ -202,10 +202,6 @@ const refreshTokenService = async (refreshToken, ipData = {}) => {
 const logoutUser = async (refreshToken) => {
     if (!refreshToken) return; // Nothing to logout if no token provided
 
-    // Delete the specific refresh token session
-    // We use deleteMany to avoid error if token not found (idempotent-ish)
-    // or findUnique then delete. deleteMany is safer if key constraint exists but we want to be loose.
-    // 'token' is unique, so delete is fine. catch error if not found.
     try {
         await prisma.refreshToken.delete({
             where: { token: refreshToken }
@@ -222,7 +218,15 @@ const forgotPassword = async (email) => {
         where: { email }
     })
 
-    if (!user) return true // Don't explain that user is not registered
+    if (!user) {
+        // SECURITY: Prevent User Enumeration.
+        // Return true even if user not found so attackers can't check which emails exist.
+        // But for Devs, log it so we know why email wasn't sent.
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[ForgotPassword] User with email ${email} NOT FOUND. Silent success returned.`);
+        }
+        return true;
+    }
 
     const token = generateResetToken()
     const expiresAt = new Date(Date.now() + process.env.RESET_TOKEN_EXPIRE_MINUTES * 60 * 1000)

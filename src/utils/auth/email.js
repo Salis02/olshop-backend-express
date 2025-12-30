@@ -46,10 +46,7 @@ const sendEmail = async (to, subject, html) => {
         console.log("Email sent: ", info.messageId)
     } catch (err) {
         console.error("Email sending error => ", err.message, err.response, err.responseCode, err);
-        // Don't throw error in dev to avoid blocking flow, but good to know
-        if (process.env.NODE_ENV !== 'development') {
-            throw err
-        }
+        throw err
     }
 }
 
