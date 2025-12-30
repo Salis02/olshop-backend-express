@@ -240,21 +240,15 @@ const forgotPassword = async (email) => {
 
     await sendEmail(
         email,
-        "Reset password TEST",
-        "<p>Hello this is a reset password test email without URL.</p>"
-    );
-
-
-    // await sendEmail(
-    //     email,
-    //     `Reset password`,
-    //     `
-    //         <h3>Password Reset</h3>
-    //         <p>Klik link berikut :</p>
-    //         <a href="${resetUrl}" >${resetUrl}</a>
-    //         <p>Expired dalam ${process.env.RESET_TOKEN_EXPIRE_MINUTES} menit</p>
-    //     `
-    // )
+        `Reset password`,
+        `
+            <h3>Password Reset</h3>
+            <p>Klik link berikut untuk reset password Anda:</p>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}" target="_blank">Reset Password</a>
+            <p>Atau copy link ini: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}</p>
+            <p>Link ini expired dalam ${process.env.RESET_TOKEN_EXPIRE_MINUTES} menit.</p>
+        `
+    )
 
     return true
 }
