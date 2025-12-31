@@ -50,22 +50,45 @@ const registerUser = async (data, ip) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     //Buat User baru
-    const newUser = await prisma.user.create({
-        data: {
-            role_id: role.id,
-            name,
-            email,
-            password: hashedPassword,
-            phone,
-            deleted_at: new Date()
-        }
-    });
+    const result = await prisma.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+            data: {
+                role_id: role.id,
+                name,
+                email,
+                password: hashedPassword,
+                phone,
+                deleted_at: new Date()
+            }
+        });
 
-    return {
-        uuid: newUser.uuid,
-        name: newUser.name,
-        email: newUser.email
-    };
+        const token = generateResetToken()
+        const expiresAt = new Date(Date.now() * 24 * 60 * 60 * 1000) // 24 hours
+
+        await tx.passwordReset.create({
+            data: {
+                email: newUser.email,
+                token,
+                expires_at: expiresAt
+            }
+        })
+
+        return { newUser, token }
+    })
+
+    // Send Email verification
+    await sendEmail(
+        result.newUser.email,
+        "VERIFICATION E-COMMERCE ACCOUNT",
+        verifyAccountTemplate(result.token)
+    )
+
+    return{
+        uuid: result.newUser.uuid,
+        name: result.newUser.name,
+        email: result.newUser.email,
+        message: "Registration successfully. Please check your email to verify your account"
+    }
 }
 
 const loginUser = async (data, ip) => {
@@ -220,9 +243,7 @@ const forgotPassword = async (email) => {
     })
 
     if (!user) {
-        // SECURITY: Prevent User Enumeration.
-        // Return true even if user not found so attackers can't check which emails exist.
-        // But for Devs, log it so we know why email wasn't sent.
+
         if (process.env.NODE_ENV === 'development') {
             console.log(`[ForgotPassword] User with email ${email} NOT FOUND. Silent success returned.`);
         }
