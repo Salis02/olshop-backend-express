@@ -63,8 +63,8 @@ const registerUser = async (data, ip) => {
         });
 
         const token = generateResetToken()
-        const expiresAt = new Date(Date.now() * 24 * 60 * 60 * 1000) // 24 hours
-
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        
         await tx.passwordReset.create({
             data: {
                 email: newUser.email,

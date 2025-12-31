@@ -1,33 +1,14 @@
-const nodemailer = require('nodemailer')
+const { Resend } = require('resend');
 
-// Configurable transport based on environment variables
-const createTransporter = () => {
-    // 1. Console Log Strategy (Development / No SMTP)
-    // Runs if explicitly in development OR if SMTP_PASS is missing/placeholder
-    if (process.env.NODE_ENV === 'development' && (!process.env.SMTP_PASS || process.env.SMTP_PASS.includes('123456'))) {
-        return null;
-    }
-
-    // 2. SMTP Strategy (Resend, Gmail, etc)
-    return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || "smtp.gmail.com",
-        port: parseInt(process.env.SMTP_PORT) || 465,
-        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-        auth: {
-            user: process.env.SMTP_USER || process.env.GMAIL_USER,
-            pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD,
-        }
-    })
-}
-
-const transporter = createTransporter();
+// Inisialisasi Resend dengan API Key dari .env
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const sendEmail = async (to, subject, html) => {
     try {
-        // Fallback: If no transporter (Dev mode without SMTP), log to console
-        if (!transporter) {
+        // Fallback: Jika tidak ada API Key atau di mode Development tanpa Key
+        if (!resend || process.env.NODE_ENV === 'development' && !process.env.RESEND_API_KEY) {
             console.log("=================================================");
-            console.log("             EMAIL SIMULATION (DEV)              ");
+            console.log("          EMAIL SIMULATION (RESEND DEV)          ");
             console.log("=================================================");
             console.log(`To: ${to}`);
             console.log(`Subject: ${subject}`);
@@ -37,16 +18,22 @@ const sendEmail = async (to, subject, html) => {
             return;
         }
 
-        const info = await transporter.sendMail({
-            from: process.env.SMTP_FROM || `"E-Commerce App" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: process.env.SMTP_FROM || 'onboarding@resend.dev', // Jika domain belum verif, pakai default resend
             to,
             subject,
-            html
+            html,
         });
-        console.log("Email sent: ", info.messageId)
+
+        if (error) {
+            console.error("Resend API Error => ", error);
+            throw error;
+        }
+
+        console.log("Email sent via Resend: ", data.id);
     } catch (err) {
-        console.error("Email sending error => ", err.message, err.response, err.responseCode, err);
-        throw err
+        console.error("Email sending error => ", err.message);
+        throw err;
     }
 }
 
