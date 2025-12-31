@@ -46,6 +46,11 @@ const logout = async (req, res) => {
     return success(res, null, 'User logged out successfully', 200);
 }
 
+const activateAccount = async (req, res) => {
+    await authService.activateAccount(req.body.token)
+    return success(res, null, "Account successfully verified and activated")
+}
+
 const forgotPassword = async (req, res) => {
     await authService.forgotPassword(req.body.email)
     return success(res, null, 'Reset link sent to email')
@@ -62,6 +67,7 @@ module.exports = {
     login,
     refreshToken,
     logout,
+    activateAccount,
     forgotPassword,
     resetPassword
 };

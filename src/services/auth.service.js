@@ -83,7 +83,7 @@ const registerUser = async (data, ip) => {
         verifyAccountTemplate(result.token)
     )
 
-    return{
+    return {
         uuid: result.newUser.uuid,
         name: result.newUser.name,
         email: result.newUser.email,
@@ -114,7 +114,7 @@ const loginUser = async (data, ip) => {
     }
 
     if (user.deleted_at !== null) {
-        throw new ForbiddenError("Account is deleted");
+        throw new ForbiddenError("Account is not activated! Please verify your email before logging in");
     }
 
     //Cek password
@@ -235,6 +235,37 @@ const logoutUser = async (refreshToken) => {
     }
 }
 
+const activateAccount = async (token) => {
+    const record = await prisma.passwordReset.findUnique({
+        where: { token },
+        include: { user: true }
+    });
+
+    if (!record) throw new ValidationError("Invalid token");
+    if (new Date() > record.expires_at) {
+        // Jika expired, hapus tokennya
+        await prisma.passwordReset.delete({ where: { token } });
+        throw new ValidationError("Token expired. Please request a new verification email.");
+    }
+
+    await prisma.$transaction([
+        // Aktifkan user
+        prisma.user.update({
+            where: { email: record.email },
+            data: {
+                deleted_at: null,
+                email_verified_at: new Date()
+            }
+        }),
+        // Hapus token setelah dipakai agar tabel tetap ringan
+        prisma.passwordReset.delete({
+            where: { token }
+        })
+    ]);
+
+    return true;
+}
+
 const forgotPassword = async (email) => {
 
     // Search user's email
@@ -262,18 +293,10 @@ const forgotPassword = async (email) => {
         }
     })
 
-    const resetUrl = `${process.env.APP_URL}/auth/reset-password?token=${token}`
-
     await sendEmail(
         email,
-        `Reset password`,
-        `
-            <h3>Password Reset</h3>
-            <p>Klik link berikut untuk reset password Anda:</p>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}" target="_blank">Reset Password</a>
-            <p>Atau copy link ini: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}</p>
-            <p>Link ini expired dalam ${process.env.RESET_TOKEN_EXPIRE_MINUTES} menit.</p>
-        `
+        "Reset password",
+        forgotPasswordTemplate(token)
     )
 
     return true
@@ -292,23 +315,13 @@ const resetPassword = async (token, newPassword) => {
 
     const newHashedPassword = await bcrypt.hash(newPassword, 10)
 
-    await prisma.user.update({
-        where: {
-            email: record.email
-        },
-        data: {
-            password: newHashedPassword
-        }
-    })
-
-    await prisma.passwordReset.update({
-        where: {
-            token
-        },
-        data: {
-            used: true
-        }
-    })
+    await prisma.$transaction([
+        prisma.user.update({
+            where: { email: record.email },
+            data: { password: newHashedPassword }
+        }),
+        prisma.passwordReset.delete({ where: { token } })
+    ]);
 
     return true
 }
@@ -318,6 +331,7 @@ module.exports = {
     loginUser,
     refreshTokenService,
     logoutUser,
+    activateAccount,
     forgotPassword,
     resetPassword
 };
