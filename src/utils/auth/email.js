@@ -50,4 +50,29 @@ const sendEmail = async (to, subject, html) => {
     }
 }
 
+const baseTemplate = (title, content) => {
+    `<div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;">
+        <h2 style="color: #333;">${title}</h2>
+        ${content}
+        <p style="margin-top: 20px; font-size: 0.8em; color: #888;">
+            Jika Anda tidak merasa melakukan permintaan ini, abaikan email ini.
+        </p>
+    </div>`
+}
+
+const forgotPassword = (token) => {
+    const url = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    return baseTemplate(
+        "RESET PASSWORD",
+        `
+        <p>Klik link berikut untuk reset password Anda:</p>
+        <a href="${url}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+        <p>Atau copy link ini: <br> ${url}</p>
+        <p>Link ini expired dalam ${process.env.RESET_TOKEN_EXPIRE_MINUTES} menit.</p>
+        `
+    )
+}
+
+
+
 module.exports = { sendEmail }
