@@ -73,6 +73,16 @@ const forgotPassword = (token) => {
     )
 }
 
-
+const vedifyAccount = (token) => {
+    const url = `${process.env.FRONTEND_URL}/verify-account?token=${token}`;
+    return baseTemplate(
+        "VERIFICATION ACCOUNT"
+         `
+            <p>Selamat bergabung! Silakan verifikasi akun Anda untuk mulai berbelanja:</p>
+            <a href="${url}" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verifikasi Sekarang</a>
+            <p>Atau copy link ini: <br> ${url}</p>   
+        `
+    )
+}
 
 module.exports = { sendEmail }
