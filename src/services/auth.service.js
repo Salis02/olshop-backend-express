@@ -6,7 +6,7 @@ const { rateLimitLogin, resetLoginAttempt, rateLimitRegister } = require('../uti
 const { validateRequest } = require('../utils/validate');
 const { registerSchema, loginSchema } = require('../validators/auth.validator');
 const { generateResetToken } = require('../utils/auth/generateToken');
-const { sendEmail } = require('../utils/auth/email');
+const { sendEmail, forgotPasswordTemplate, verifyAccountTemplate } = require('../utils/auth/email');
 const {
     ValidationError,
     NotFoundError,
@@ -57,6 +57,7 @@ const registerUser = async (data, ip) => {
             email,
             password: hashedPassword,
             phone,
+            deleted_at: new Date()
         }
     });
 

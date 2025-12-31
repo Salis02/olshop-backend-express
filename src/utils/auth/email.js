@@ -51,7 +51,7 @@ const sendEmail = async (to, subject, html) => {
 }
 
 const baseTemplate = (title, content) => {
-    `<div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;">
+    return `<div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;">
         <h2 style="color: #333;">${title}</h2>
         ${content}
         <p style="margin-top: 20px; font-size: 0.8em; color: #888;">
@@ -60,8 +60,8 @@ const baseTemplate = (title, content) => {
     </div>`
 }
 
-const forgotPassword = (token) => {
-    const url = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+const forgotPasswordTemplate = (token) => {
+    const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
     return baseTemplate(
         "RESET PASSWORD",
         `
@@ -70,19 +70,23 @@ const forgotPassword = (token) => {
         <p>Atau copy link ini: <br> ${url}</p>
         <p>Link ini expired dalam ${process.env.RESET_TOKEN_EXPIRE_MINUTES} menit.</p>
         `
-    )
+    );
 }
 
-const vedifyAccount = (token) => {
-    const url = `${process.env.FRONTEND_URL}/verify-account?token=${token}`;
+const verifyAccountTemplate = (token) => {
+    const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-account?token=${token}`;
     return baseTemplate(
-        "VERIFICATION ACCOUNT"
-         `
-            <p>Selamat bergabung! Silakan verifikasi akun Anda untuk mulai berbelanja:</p>
-            <a href="${url}" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verifikasi Sekarang</a>
-            <p>Atau copy link ini: <br> ${url}</p>   
+        "VERIFICATION ACCOUNT",
         `
-    )
+        <p>Selamat bergabung! Silakan verifikasi akun Anda untuk mulai berbelanja:</p>
+        <a href="${url}" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verifikasi Sekarang</a>
+        <p>Atau copy link ini: <br> ${url}</p> 
+        `
+    );
 }
 
-module.exports = { sendEmail }
+module.exports = {
+    sendEmail,
+    forgotPasswordTemplate,
+    verifyAccountTemplate
+}
