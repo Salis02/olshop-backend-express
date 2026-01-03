@@ -1,15 +1,16 @@
 const prisma = require('../prisma/client')
 const { validateRequest } = require('../utils/validate')
 const { createPaymentSchema, updatePaymentStatusSchema } = require('../validators/payment.validator')
+const { snap } = require('../utils/midtrans')
+const { enable } = require('../app')
 
 const createPayment = async (user_id, data) => {
-    const { order_id, provider, reference_no, amount } = validateRequest(createPaymentSchema, data)
+    const { order_id, provider, amount } = validateRequest(createPaymentSchema, data)
 
     // Check if order exist
     const order = await prisma.order.findUnique({
-        where: {
-            uuid: order_id
-        }
+        where: { uuid: order_id },
+        include: { user: true }
     })
 
     if (!order || order.user_id !== user_id) throw new Error('Order not found');
@@ -18,21 +19,36 @@ const createPayment = async (user_id, data) => {
     // Checking amount is right
     if (amount !== order.grand_total) throw new Error("Amount is not valid");
 
-    // Check if this order is a first payment
-    const existingOrder = await prisma.payment.findFirst({
+    // 1. Check if payment was existing for this order
+    const existingPayment = await prisma.payment.findFirst({
         where: { order_id }
     })
 
-    // if (existingOrder) throw new Error('Payment already exists for this order!')
-    if (existingOrder) return existingOrder
+    if (existingPayment) return existingPayment
 
+    // 2. Prepare parameters for midtrans snap
+    let parameter = {
+        transaction_details: {
+            order_id: order.uuid,
+            gross_amount: amount,
+        },
+        customer_details: {
+            first_name: order.user.name,
+            email: order.user.email
+        },
+        // Optional : paramater payment method
+        // enable_payments: [provider] || undefined,
+    }
 
-    // Create payment, default still pending cause we will integrating with midtrans or other providers
+    // 3. Call midtrans snap to create transaction
+    const transaction = await snap.createTransaction(parameter) // return {token, redirect_url}
+
+    // 4. Create payment, default still pending cause we will integrating with midtrans or other providers
     return await prisma.payment.create({
         data: {
             order_id,
             provider,
-            reference_no,
+            reference_no: transaction.token,
             amount,
             status: 'pending'
         }
