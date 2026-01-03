@@ -4,38 +4,44 @@ const { createPaymentSchema, updatePaymentStatusSchema } = require('../validator
 const { snap } = require('../utils/midtrans')
 
 const processWebhook = async (notification) => {
-    // Parse official notification object from midtrans
-    const statusResponse = await snap.transaction.notification(notification)
+    const statusResponse = await snap.transaction.notification(notification);
+    const orderId = statusResponse.order_id;
+    const transactionStatus = statusResponse.transaction_status;
+    const fraudStatus = statusResponse.fraud_status;
 
-    const orderId = statusResponse.order_id
-    const transactionStatus = statusResponse.transaction_status
-    const fraudStatus = statusResponse.fraud_status
-
-    let updateData = { status: 'pending' }
+    let targetStatus = 'pending';
 
     if (transactionStatus == 'capture') {
-        if (fraudStatus == 'challenge') updateData.status = 'pending';
-        else if (fraudStatus == 'accept') updateData.status = 'success';
+        if (fraudStatus == 'accept') targetStatus = 'success';
     } else if (transactionStatus == 'settlement') {
-        updateData.status = 'success';
-        updateData.paid_at = new Date();
-    } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
-        updateData.status = 'failed';
-    } else if (transactionStatus == 'pending') {
-        updateData.status = 'pending';
+        targetStatus = 'success';
+    } else if (['cancel', 'deny', 'expire'].includes(transactionStatus)) {
+        targetStatus = 'failed';
     }
 
-    // Get payment record by order_id
-    const payment = await prisma.payment.findFirst({
-        where: { order_id: orderId }
-    })
+    // Gunakan Transaction untuk memastikan kedua tabel terupdate bersamaan
+    return await prisma.$transaction(async (tx) => {
+        // 1. Update Tabel Payment
+        const updatedPayment = await tx.payment.updateMany({
+            where: { order_id: orderId },
+            data: {
+                status: targetStatus,
+                paid_at: targetStatus === 'success' ? new Date() : null
+            }
+        });
 
-    if (payment) {
-        return await updatePaymentStatus(payment.id, updateData)
-    }
+        // 2. Update Tabel Order
+        await tx.order.update({
+            where: { uuid: orderId },
+            data: { payment_status: targetStatus }
+        });
+
+        console.log(`Webhook Success: Order ${orderId} is now ${targetStatus}`);
+        return updatedPayment;
+    });
 }
 
-const createPayment = async (user_id, data) => {
+const createPayment = async (user_uuid, data) => {
     const { order_id, provider, amount } = validateRequest(createPaymentSchema, data)
 
     // Check if order exist
@@ -44,10 +50,8 @@ const createPayment = async (user_id, data) => {
         include: { user: true }
     })
 
-    if (!order || order.user_id !== user_id) throw new Error('Order not found');
+    if (!order || order.user.uuid !== user_uuid) throw new Error('Order not found');
     if (order.payment_status !== 'pending') throw new Error("Order has been paid or canceled");
-
-    // Checking amount is right
     if (amount !== order.grand_total) throw new Error("Amount is not valid");
 
     // 1. Check if payment was existing for this order
@@ -72,9 +76,10 @@ const createPayment = async (user_id, data) => {
     }
 
     // 3. Call midtrans snap to create transaction
-    // Di payment.service.js
+
+    let transaction;
     try {
-        const transaction = await snap.createTransaction(parameter); // return token and redirect_url
+        transaction = await snap.createTransaction(parameter); // return token and redirect_url
         console.log("Midtrans Response:", transaction);
     } catch (err) {
         console.error("Midtrans Error Detail:", err); // Lihat detail di terminal Anda!
