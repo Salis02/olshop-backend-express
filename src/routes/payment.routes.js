@@ -9,7 +9,7 @@ router.post('/notification', paymentController.handleNotification);
 
 router.get('/', authMiddleware, allowRoles('USER', 'SELLER', 'ADMIN'), paymentController.getPayment);
 router.get('/:id', authMiddleware, allowRoles('USER', 'SELLER', 'ADMIN'), paymentController.getPaymentDetail);
-router.post('/', authMiddleware, allowRoles('USER'), paymentController.createPayment);
+router.post('/', authMiddleware, allowRoles('USER', 'SELLER'), paymentController.createPayment);
 
 //Admin
 router.put('/:id/status', authMiddleware, allowRoles('ADMIN'), paymentController.updateStatus);

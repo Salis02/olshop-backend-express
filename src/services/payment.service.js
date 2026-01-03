@@ -61,7 +61,7 @@ const createPayment = async (user_id, data) => {
     let parameter = {
         transaction_details: {
             order_id: order.uuid,
-            gross_amount: amount,
+            gross_amount: Math.round(amount),
         },
         customer_details: {
             first_name: order.user.name,
@@ -72,7 +72,14 @@ const createPayment = async (user_id, data) => {
     }
 
     // 3. Call midtrans snap to create transaction
-    const transaction = await snap.createTransaction(parameter) // return {token, redirect_url}
+    // Di payment.service.js
+    try {
+        const transaction = await snap.createTransaction(parameter); // return token and redirect_url
+        console.log("Midtrans Response:", transaction);
+    } catch (err) {
+        console.error("Midtrans Error Detail:", err); // Lihat detail di terminal Anda!
+        throw err;
+    }
 
     // 4. Create payment, default still pending cause we will integrating with midtrans or other providers
     return await prisma.payment.create({

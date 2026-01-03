@@ -3,7 +3,7 @@ const { z } = require('zod');
 const createPaymentSchema = z.object({
     order_id: z.string().uuid({ message: 'Invalid order ID' }),
     provider: z.string().min(1, 'Provider is required'),
-    reference_no: z.string().min(1, 'Reference number is required'),
+    // reference_no: z.string().min(1, 'Reference number is required'),
     amount: z.number().positive('Amount must be a positive number'),
 });
 
