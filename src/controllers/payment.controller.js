@@ -1,6 +1,15 @@
 const paymentService = require('../services/payment.service')
 const { success, error } = require('../utils/response')
 
+const handleNotification = async (req, res) => {
+    try {
+        const notification = await paymentService.processWebhook(req.body)
+        return success(res, notification, 'Notification handled successfully', 200)
+    } catch (err) {
+        return error(res, err.message)
+    }
+}
+
 const createPayment = async (req, res) => {
     try {
         const payment = await paymentService.createPayment(req.user.uuid, req.body)
@@ -41,6 +50,7 @@ const updateStatus = async (req, res) => {
 }
 
 module.exports = {
+    handleNotification,
     createPayment,
     getPayment,
     getPaymentDetail,

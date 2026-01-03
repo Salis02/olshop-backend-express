@@ -2,7 +2,38 @@ const prisma = require('../prisma/client')
 const { validateRequest } = require('../utils/validate')
 const { createPaymentSchema, updatePaymentStatusSchema } = require('../validators/payment.validator')
 const { snap } = require('../utils/midtrans')
-const { enable } = require('../app')
+
+const processWebhook = async (notification) => {
+    // Parse official notification object from midtrans
+    const statusResponse = await snap.transaction.notification(notification)
+
+    const orderId = statusResponse.order_id
+    const transactionStatus = statusResponse.transaction_status
+    const fraudStatus = statusResponse.fraud_status
+
+    let updateData = { status: 'pending' }
+
+    if (transactionStatus == 'capture') {
+        if (fraudStatus == 'challenge') updateData.status = 'pending';
+        else if (fraudStatus == 'accept') updateData.status = 'success';
+    } else if (transactionStatus == 'settlement') {
+        updateData.status = 'success';
+        updateData.paid_at = new Date();
+    } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
+        updateData.status = 'failed';
+    } else if (transactionStatus == 'pending') {
+        updateData.status = 'pending';
+    }
+
+    // Get payment record by order_id
+    const payment = await prisma.payment.findFirst({
+        where: { order_id: orderId }
+    })
+
+    if (payment) {
+        return await updatePaymentStatus(payment.id, updateData)
+    }
+}
 
 const createPayment = async (user_id, data) => {
     const { order_id, provider, amount } = validateRequest(createPaymentSchema, data)
