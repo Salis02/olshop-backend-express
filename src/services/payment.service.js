@@ -77,35 +77,34 @@ const updatePaymentStatus = async (id, data) => {
 
     const payload = validateRequest(updatePaymentStatusSchema, data)
 
-    const payment = await prisma.payment.findUnique({
-        where: {
-            id
+    return await prisma.$transaction(async (tx) => {
+        const payment = await tx.payment.findUnique({
+            where: { id },
+            select: { order_id: true, status: true }
+        })
+
+        if (!payment) {
+            throw new Error("Payment not found");
         }
+
+        if (payment.status === 'success') return payment;
+
+        const updated = await tx.payment.update({
+            where: { id },
+            data: {
+                status: payload.status,
+                paid_at: payload.paid_at ? new Date(payload.paid_at) : null
+            }
+        })
+
+        // sync status change dengan order
+        await tx.order.update({
+            where: { uuid: payment.order_id },
+            data: { payment_status: payload.status }
+        });
+
+        return updated
     })
-
-    if (!payment) {
-        throw new Error("Payment not found");
-    }
-
-    const updated = await prisma.payment.update({
-        where: { id },
-        data: {
-            status: payload.status,
-            paid_at: payload.paid_at || null
-        }
-    })
-
-    // sync status change dengan order
-    await prisma.order.update({
-        where: {
-            uuid: payment.order_id
-        },
-        data: {
-            payment_status: payload.status
-        }
-    })
-
-    return updated
 }
 
 module.exports = {
