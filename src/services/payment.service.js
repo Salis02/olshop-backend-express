@@ -155,6 +155,7 @@ const updatePaymentStatus = async (id, data) => {
 }
 
 module.exports = {
+    processWebhook,
     createPayment,
     getPayment,
     getPaymentDetail,
