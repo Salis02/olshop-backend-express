@@ -87,7 +87,7 @@ const createPayment = async (user_uuid, data) => {
     }
 
     // 4. Create payment, default still pending cause we will integrating with midtrans or other providers
-    return await prisma.payment.create({
+    const payment = await prisma.payment.create({
         data: {
             order_id,
             provider,
@@ -96,6 +96,12 @@ const createPayment = async (user_uuid, data) => {
             status: 'pending'
         }
     })
+
+    return {
+        ...payment,
+        snap_token: transaction.token,
+        redirect_url: transaction.redirect_url
+    }
 }
 
 const getPayment = async (user_id) => {
