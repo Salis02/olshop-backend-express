@@ -91,7 +91,10 @@ const deleteAddress = async (id, userId, actor) => {
         user_id: actor.uuid,
         action: `Deleted address with id ${id}`,
         target_type: userId,
-        target_id: id,
+        target_id: userId,
+        meta: {
+            ...address
+        }
     })
 
     return await prisma.address.delete({
